@@ -31,8 +31,7 @@ enum {
   _FUNC,
   _SYMBOL,
   _REGEX,
-  _SYSTEM,
-  _MOUSE
+  _SYSTEM
 };
 
 // Layer when held, key otherwise
@@ -41,7 +40,7 @@ enum {
 #define LT_SPC  LT(_SYMBOL, KC_SPC)
 #define LT_QUOT LT(_REGEX, KC_QUOT)
 #define LT_ENT  LT(_SYSTEM, KC_ENT)
-#define LT_BSPC LT(_MOUSE, KC_BSPC)
+#define LT_BSPC LT(_SYSTEM, KC_BSPC)
 
 // Layer on/off toggle
 #define TG_NUM  TG(_NUMBER)
@@ -49,14 +48,14 @@ enum {
 #define TG_SYM  TG(_SYMBOL)
 #define TG_REGX TG(_REGEX)
 #define TG_SYS  TG(_SYSTEM)
-#define TG_MOUS TG(_MOUSE)
+
 
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [_QWERTY] = LAYOUT_wrapper(
     TG_FUNC, _________________QWERTY_L1_________________,              _________________QWERTY_R1_________________, TG_SYM,
     KC_CAPS, _________________QWERTY_L2_________________,              _________________QWERTY_R2_________________, TG_NUM,
-    TG_MOUS, _________________QWERTY_L3_________________,              _________________QWERTY_R3_________________, TG_REGX,
+    TG_SYS,  _________________QWERTY_L3_________________,              _________________QWERTY_R3_________________, TG_REGX,
                                      LT_ESC,  LT_QUOT, LT_TAB,   LT_ENT,  LT_SPC,  LT_BSPC
   ),
 
@@ -92,13 +91,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     RESET,   ________________SYSTEM_L1__________________,              ________________SYSTEM_R1__________________, RESET,
     VRSN,    ________________SYSTEM_L2__________________,              ________________SYSTEM_R2__________________, EEP_RST,
     _______, ________________SYSTEM_L3__________________,              ________________SYSTEM_R3__________________, KC_MPLY,
-                                     _______, _______, _______,  _______, _______, _______
-  ),
-
-  [_MOUSE] = LAYOUT_wrapper( \
-    RESET,   ________________MOUSE_L1___________________,              ________________MOUSE_R1___________________, RESET,
-    VRSN,    ________________MOUSE_L2___________________,              ________________MOUSE_R2___________________, EEP_RST,
-    _______, ________________MOUSE_L3___________________,              ________________MOUSE_R3___________________, KC_MPLY,
                                      _______, _______, _______,  _______, _______, _______
   )
 };
