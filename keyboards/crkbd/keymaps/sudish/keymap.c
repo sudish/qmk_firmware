@@ -49,7 +49,7 @@ enum {
 #define TG_SYM  TG(_SYMBOL)
 #define TG_REGX TG(_REGEX)
 #define TG_SYS  TG(_SYSTEM)
-
+#define TO_DEFL TO(_QWERTY)
 
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -92,7 +92,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     RESET,   ________________SYSTEM_L1__________________,              ________________SYSTEM_R1__________________, RESET,
     VRSN,    ________________SYSTEM_L2__________________,              ________________SYSTEM_R2__________________, EEP_RST,
     TG_SYS,  ________________SYSTEM_L3__________________,              ________________SYSTEM_R3__________________, SHKEYS,
-                                     _______, _______, _______,  _______, _______, _______
+                                     TO_DEFL, _______, _______,  _______, _______, _______
   )
 };
 
