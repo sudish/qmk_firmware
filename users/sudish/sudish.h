@@ -36,8 +36,8 @@ These macros assume they are being applied to a 5-key core row.
 */
 
 // GUI, Ctl, Alt, Shift for the home row
-#define GCAS_L(K1, K2, K3, K4, K5)           LGUI_T(K1), LCTL_T(K2), LALT_T(K3), LSFT_T(K4), K5
-#define GCAS_R(K1, K2, K3, K4, K5)           K1, RSFT_T(K2), RALT_T(K3), RCTL_T(K4), RGUI_T(K5)
+#define GCAS_L(K1, K2, K3, K4, K5)           LSFT_T(K1), LGUI_T(K2), LALT_T(K3), LCTL_T(K4), K5
+#define GCAS_R(K1, K2, K3, K4, K5)           K1, RCTL_T(K2), RALT_T(K3), RGUI_T(K4), RSFT_T(K5)
 
 
 /*

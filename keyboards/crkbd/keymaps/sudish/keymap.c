@@ -40,8 +40,8 @@ enum {
 #define LT_ESC  LT(_FUNC, KC_ESC)
 #define LT_SPC  LT(_SYMBOL, KC_SPC)
 #define LT_QUOT LT(_SYSTEM, KC_QUOT)
-#define LT_ENT  LT(_REGEX, KC_ENT)
-#define LT_BSPC LT(_SYSTEM, KC_BSPC)
+#define LT_ENT  LT(_SYSTEM, KC_ENT)
+#define LT_BSPC LT(_REGEX, KC_BSPC)
 
 // Layer on/off toggle
 #define TG_NUM  TG(_NUMBER)
@@ -57,7 +57,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     TG_REGX, _________________QWERTY_L1_________________,              _________________QWERTY_R1_________________, TG_SYM,
     KC_CAPS, _________________QWERTY_L2_________________,              _________________QWERTY_R2_________________, TG_NUM,
     TG_SYS,  _________________QWERTY_L3_________________,              _________________QWERTY_R3_________________, TG_FUNC,
-                                     LT_ESC,  LT_ENT,  LT_TAB,   LT_BSPC, LT_SPC,  LT_QUOT
+                                     LT_ESC, LT_BSPC,  LT_TAB,   LT_ENT,  LT_SPC,  LT_QUOT
   ),
 
   [_NUMBER] = LAYOUT_wrapper(
@@ -78,7 +78,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     _______, ________________SYMBOL_L1__________________,              ________________SYMBOL_R1__________________, _______,
     _______, ________________SYMBOL_L2__________________,              ________________SYMBOL_R2__________________, _______,
     _______, ________________SYMBOL_L3__________________,              ________________SYMBOL_R3__________________, _______,
-                                     _______, KC_EQL,  KC_BSLS,  _______, _______, _______
+                                     KC_BSLS, KC_DEL,  KC_EQL,   _______, _______, _______
   ),
 
   [_REGEX] = LAYOUT_wrapper(
