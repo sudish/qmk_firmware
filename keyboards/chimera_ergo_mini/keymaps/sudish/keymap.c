@@ -1,4 +1,5 @@
 #include "chimera_ergo_mini.h"
+#include "version.h"
 
 // The board's header doesn't define a clean layout macro, so do it ourselves.
 #define KEYMAP( \
@@ -98,3 +99,14 @@ void matrix_scan_user(void) {
             break;
     }
 };
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  switch (keycode) {
+    case VRSN: // Prints firmware version
+      if (record->event.pressed) {
+        send_string_with_delay_P(PSTR(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION ", Built on: " QMK_BUILDDATE), 5);
+      }
+      break;
+  }
+  return true;
+}
