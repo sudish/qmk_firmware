@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-/* All of the below taken from @drashna's wrappers.h */
+// Idea from @drashna's wrappers.h
 
 /*
 Since our quirky block definitions are basically a list of comma separated
@@ -25,7 +25,7 @@ arguments, we need a wrapper in order for these definitions to be
 expanded before being used as arguments to the LAYOUT_xxx macro.
 */
 #if (!defined(LAYOUT) && defined(KEYMAP))
-#   define LAYOUT KEYMAP
+  #define LAYOUT KEYMAP
 #endif
 
 #define LAYOUT_wrapper(...)                  LAYOUT(__VA_ARGS__)
@@ -39,18 +39,49 @@ These macros assume they are being applied to a 5-key core row.
 #define GCAS_L(K1, K2, K3, K4, K5)           LSFT_T(K1), LGUI_T(K2), LALT_T(K3), LCTL_T(K4), K5
 #define GCAS_R(K1, K2, K3, K4, K5)           K1, RCTL_T(K2), RALT_T(K3), RGUI_T(K4), RSFT_T(K5)
 
+// Common keycodes across all keyboards.
+enum custom_keycodes {
+  QWERTY = SAFE_RANGE,
+  RGBRST,
+  SHKEYS,
+  VRSN
+};
+
+// Common layers
+enum {
+  _QWERTY = 0,
+  _NUMBER,
+  _FUNC,
+  _SYMBOL,
+  _REGEX,
+  _SYSTEM
+};
+
+// Layer when held, key otherwise
+#define LT_TAB  LT(_NUMBER, KC_TAB)
+#define LT_ESC  LT(_FUNC, KC_ESC)
+#define LT_SPC  LT(_SYMBOL, KC_SPC)
+#define LT_QUOT LT(_SYSTEM, KC_QUOT)
+#define LT_ENT  LT(_SYSTEM, KC_ENT)
+#define LT_BSPC LT(_REGEX, KC_BSPC)
+
+// Layer on/off toggle
+#define TG_NUM  TG(_NUMBER)
+#define TG_FUNC TG(_FUNC)
+#define TG_SYM  TG(_SYMBOL)
+#define TG_REGX TG(_REGEX)
+#define TG_SYS  TG(_SYSTEM)
+#define TO_DEFL TO(_QWERTY)
+
 
 /*
-Blocks for each of the four major keyboard layouts
+Blocks for each of the layers we use.
 Organized so we can quickly adapt and modify all of them
 at once, rather than for each keyboard, one at a time.
-And this allows for much cleaner blocks in the keymaps.
-For instance Tap/Hold for Control on all of the layouts
-
-NOTE: These are all the same length.  If you do a search/replace
-  then you need to add/remove underscores to keep the
-  lengths consistent.
 */
+
+#define ___________________BLANK___________________              _______, _______, _______, _______, _______
+
 
 #define _________________QWERTY_L1_________________              KC_Q,    KC_W,    KC_E,    KC_R,    KC_T
 #define _________________QWERTY_L2_________________       GCAS_L(KC_A,    KC_S,    KC_D,    KC_F,    KC_G)
@@ -60,17 +91,18 @@ NOTE: These are all the same length.  If you do a search/replace
 #define _________________QWERTY_R2_________________       GCAS_R(KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN)
 #define _________________QWERTY_R3_________________              KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH
 
-
-#define ___________________BLANK___________________              _______, _______, _______, _______, _______
+#define _________________QWERTY_B6_________________              LT_ESC, LT_BSPC,  LT_TAB,  LT_ENT,  LT_SPC,  LT_QUOT
 
 
 #define ________________NUMBER_L1__________________              KC_NO,   KC_D,    KC_E,    KC_F,    KC_NO
 #define ________________NUMBER_L2__________________       GCAS_L(KC_NO,   KC_A,    KC_B,    KC_C,    KC_NO)
 #define ________________NUMBER_L3__________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
 
-#define ________________NUMBER_R1__________________              KC_SLSH, KC_7,    KC_8,   KC_9,    KC_ASTR
-#define ________________NUMBER_R2__________________       GCAS_R(KC_DOT,  KC_4,    KC_5,   KC_6,    KC_MINS)
-#define ________________NUMBER_R3__________________              KC_COMM, KC_1,    KC_2,   KC_3,    KC_PLUS
+#define ________________NUMBER_R1__________________              KC_SLSH, KC_7,    KC_8,    KC_9,    KC_ASTR
+#define ________________NUMBER_R2__________________       GCAS_R(KC_DOT,  KC_4,    KC_5,    KC_6,    KC_MINS)
+#define ________________NUMBER_R3__________________              KC_COMM, KC_1,    KC_2,    KC_3,    KC_PLUS
+
+#define ________________NUMBER_B6__________________              _______, _______, _______, _______, KC_0,    KC_PEQL
 
 
 #define ________________FUNC_L1____________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
@@ -81,6 +113,8 @@ NOTE: These are all the same length.  If you do a search/replace
 #define ________________FUNC_R2____________________       GCAS_R(KC_NO,   KC_F4,   KC_F5,   KC_F6,   KC_F11)
 #define ________________FUNC_R3____________________              KC_NO,   KC_F1,   KC_F2,   KC_F3,   KC_F10
 
+#define ________________FUNC_B6____________________              _______, _______, _______, _______, _______, _______
+
 
 #define ________________SYMBOL_L1__________________              KC_NO,   KC_DOT,  KC_ASTR, KC_AMPR, KC_GRV
 #define ________________SYMBOL_L2__________________              KC_EXLM, KC_UNDS, KC_PERC, KC_MINS, KC_TILD
@@ -89,6 +123,8 @@ NOTE: These are all the same length.  If you do a search/replace
 #define ________________SYMBOL_R1__________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
 #define ________________SYMBOL_R2__________________       GCAS_R(KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO)
 #define ________________SYMBOL_R3__________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
+
+#define ________________SYMBOL_B6__________________              KC_BSLS, KC_DEL,  KC_EQL,  _______, _______, _______
 
 
 #define ________________REGEX_L1___________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
@@ -99,6 +135,8 @@ NOTE: These are all the same length.  If you do a search/replace
 #define ________________REGEX_R2___________________              KC_QUES, KC_LPRN, KC_DLR,  KC_RPRN, KC_DOT
 #define ________________REGEX_R3___________________              KC_PIPE, KC_LCBR, KC_HASH, KC_RCBR, KC_MINS
 
+#define ________________REGEX_B6___________________              _______, _______, _______, KC_DEL,  KC_BSLS, _______
+
 
 #define ________________SYSTEM_L1__________________              KC_BRIU, KC_HOME, KC_UP,   KC_END,  KC_PGUP
 #define ________________SYSTEM_L2__________________       GCAS_L(KC_BRID, KC_LEFT, KC_DOWN, KC_RGHT, KC_PGDN)
@@ -107,3 +145,5 @@ NOTE: These are all the same length.  If you do a search/replace
 #define ________________SYSTEM_R1__________________              RGB_MOD, RGB_HUI, RGB_SAI, RGB_VAI, RGB_TOG
 #define ________________SYSTEM_R2__________________       GCAS_R(KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, KC_NO)
 #define ________________SYSTEM_R3__________________              RGB_RMOD,RGB_HUD, RGB_SAD, RGB_VAD, KC_NO
+
+#define ________________SYSTEM_B6__________________              TO_DEFL, _______, _______, _______, _______, _______

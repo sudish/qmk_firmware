@@ -9,7 +9,6 @@
 #endif
 
 #include "version.h"
-#include "sudish.h"
 
 extern keymap_config_t keymap_config;
 extern uint8_t is_master;
@@ -18,81 +17,51 @@ extern rgblight_config_t rgblight_config; // allows macro to read current RGB se
 #endif
 
 
-enum custom_keycodes {
-  QWERTY = SAFE_RANGE,
-  RGBRST,
-  SHKEYS,
-  VRSN
-};
-
-// Layer Names
-enum {
-  _QWERTY = 0,
-  _NUMBER,
-  _FUNC,
-  _SYMBOL,
-  _REGEX,
-  _SYSTEM
-};
-
-// Layer when held, key otherwise
-#define LT_TAB  LT(_NUMBER, KC_TAB)
-#define LT_ESC  LT(_FUNC, KC_ESC)
-#define LT_SPC  LT(_SYMBOL, KC_SPC)
-#define LT_QUOT LT(_SYSTEM, KC_QUOT)
-#define LT_ENT  LT(_SYSTEM, KC_ENT)
-#define LT_BSPC LT(_REGEX, KC_BSPC)
-
-// Layer on/off toggle
-#define TG_NUM  TG(_NUMBER)
-#define TG_FUNC TG(_FUNC)
-#define TG_SYM  TG(_SYMBOL)
-#define TG_REGX TG(_REGEX)
-#define TG_SYS  TG(_SYSTEM)
-#define TO_DEFL TO(_QWERTY)
-
+// Define our keymap using the common sections defined elsewhere.
+// Only the keys specific to this board are specified here.
+#include "sudish.h"
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [_QWERTY] = LAYOUT_wrapper(
     TG_REGX, _________________QWERTY_L1_________________,              _________________QWERTY_R1_________________, TG_SYM,
     KC_CAPS, _________________QWERTY_L2_________________,              _________________QWERTY_R2_________________, TG_NUM,
     TG_SYS,  _________________QWERTY_L3_________________,              _________________QWERTY_R3_________________, TG_FUNC,
-                                     LT_ESC, LT_BSPC,  LT_TAB,   LT_ENT,  LT_SPC,  LT_QUOT
+                                           _________________QWERTY_B6_________________
   ),
 
   [_NUMBER] = LAYOUT_wrapper(
     _______, ________________NUMBER_L1__________________,              ________________NUMBER_R1__________________, _______,
     _______, ________________NUMBER_L2__________________,              ________________NUMBER_R2__________________, _______,
     _______, ________________NUMBER_L3__________________,              ________________NUMBER_R3__________________, _______,
-                                     _______, _______, _______,  _______, KC_0,    KC_PEQL
+                                           ________________NUMBER_B6__________________
   ),
 
   [_FUNC] = LAYOUT_wrapper( \
     _______, ________________FUNC_L1____________________,              ________________FUNC_R1____________________, _______,
     _______, ________________FUNC_L3____________________,              ________________FUNC_R2____________________, _______,
     _______, ________________FUNC_L3____________________,              ________________FUNC_R3____________________, _______,
-                                     _______, _______, _______,  _______, _______, _______
+                                           ________________FUNC_B6____________________
   ),
 
   [_SYMBOL] = LAYOUT_wrapper(
     _______, ________________SYMBOL_L1__________________,              ________________SYMBOL_R1__________________, _______,
     _______, ________________SYMBOL_L2__________________,              ________________SYMBOL_R2__________________, _______,
     _______, ________________SYMBOL_L3__________________,              ________________SYMBOL_R3__________________, _______,
-                                     KC_BSLS, KC_DEL,  KC_EQL,   _______, _______, _______
+                                           ________________SYMBOL_B6__________________
   ),
 
   [_REGEX] = LAYOUT_wrapper(
     _______, ________________REGEX_L1___________________,              ________________REGEX_R1___________________, _______,
     _______, ________________REGEX_L2___________________,              ________________REGEX_R2___________________, _______,
     _______, ________________REGEX_L3___________________,              ________________REGEX_R3___________________, _______,
-                                     _______, _______, _______,  KC_DEL,  KC_BSLS, _______
+                                           ________________REGEX_B6___________________
   ),
 
   [_SYSTEM] = LAYOUT_wrapper( \
     RESET,   ________________SYSTEM_L1__________________,              ________________SYSTEM_R1__________________, RESET,
     VRSN,    ________________SYSTEM_L2__________________,              ________________SYSTEM_R2__________________, EEP_RST,
     TG_SYS,  ________________SYSTEM_L3__________________,              ________________SYSTEM_R3__________________, SHKEYS,
-                                     TO_DEFL, _______, _______,  _______, _______, _______
+                                           ________________SYSTEM_B6__________________
   )
 };
 
