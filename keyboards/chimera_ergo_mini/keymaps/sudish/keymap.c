@@ -10,11 +10,11 @@
             k40, k41, k42,           k43, k44, k45 \
 ) \
 { \
-	{ k10,   k00, k21, k12, k03,       k06, k17, k28, k09, k19   }, \
-	{ k20,   k01, k31, k22, k13,       k16, k27, k38, k08, k29   }, \
-	{ k30,   k11, k02, k32, k23,       k26, k37, k07, k18, k39   }, \
-	{ KC_NO, k33, k04, k14, k24,       k25, k15, k05, k36, KC_NO }, \
-	{ KC_NO, k40, k41, k42, k34,       k35, k43, k44, k45, KC_NO }, \
+  { k10,   k00, k21, k12, k03,       k06, k17, k28, k09, k19   }, \
+  { k20,   k01, k31, k22, k13,       k16, k27, k38, k08, k29   }, \
+  { k30,   k11, k02, k32, k23,       k26, k37, k07, k18, k39   }, \
+  { KC_NO, k33, k04, k14, k24,       k25, k15, k05, k36, KC_NO }, \
+  { KC_NO, k40, k41, k42, k34,       k35, k43, k44, k45, KC_NO }, \
 }
 
 // Define our keymap using the common sections defined elsewhere.
@@ -73,31 +73,31 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 
 void matrix_scan_user(void) {
-    uint8_t layer = biton32(layer_state);
+  uint8_t layer = biton32(layer_state);
 
-    switch (layer) {
-        case _QWERTY:
-            set_led_blue;
-            break;
-        case _NUMBER:
-            set_led_magenta;
-            break;
-        case _FUNC:
-            set_led_cyan;
-            break;
-        case _SYMBOL:
-            set_led_green;
-            break;
-        case _REGEX:
-	        set_led_yellow;
-	        break;
-        case _SYSTEM:
-	        set_led_red;
-	        break;
-        default:
-            set_led_white;
-            break;
-    }
+  switch (layer) {
+    case _QWERTY:
+      set_led_blue;
+      break;
+    case _NUMBER:
+      set_led_magenta;
+      break;
+    case _FUNC:
+      set_led_cyan;
+      break;
+    case _SYMBOL:
+      set_led_green;
+      break;
+    case _REGEX:
+      set_led_yellow;
+      break;
+    case _SYSTEM:
+      set_led_red;
+      break;
+    default:
+      set_led_white;
+      break;
+  }
 };
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {

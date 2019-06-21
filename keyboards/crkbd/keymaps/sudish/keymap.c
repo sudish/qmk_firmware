@@ -83,11 +83,11 @@ void update_tri_layer_RGB(uint8_t layer1, uint8_t layer2, uint8_t layer3) {
 
 void matrix_init_user(void) {
 #ifdef RGBLIGHT_ENABLE
-    RGB_current_mode = rgblight_config.mode;
+  RGB_current_mode = rgblight_config.mode;
 #endif
 // SSD1306 OLED init, make sure to add #define SSD1306OLED in config.h
 #ifdef SSD1306OLED
-    iota_gfx_init(!has_usb());  // turns on the display
+  iota_gfx_init(!has_usb());  // turns on the display
 #endif
 }
 
@@ -126,58 +126,58 @@ static void set_keylog(uint16_t keycode, keyrecord_t *record) {
 
 static const char *read_logo(void) {
   static char logo[] = {
-      0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f, 0x90, 0x91, 0x92, 0x93, 0x94,
-      0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4,
-      0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4,
-      0};
+    0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f, 0x90, 0x91, 0x92, 0x93, 0x94,
+    0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4,
+    0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4,
+    0};
 
   return logo;
 }
 
 static const char *get_layer_state(void) {
-    static char state_str[25];
+  static char state_str[25];
 
-    char *layer_name;
-    switch (biton32(layer_state)) {
-        case 0:
-            layer_name = "Default";
-            break;
-        case _NUMBER:
-            layer_name = "Number";
-            break;
-        case _FUNC:
-            layer_name = "Function";
-            break;
-        case _SYMBOL:
-            layer_name = "Symbol";
-            break;
-        case _REGEX:
-            layer_name = "Regex";
-            break;
-        case _SYSTEM:
-            layer_name = "System";
-            break;
-        default:
-            layer_name = "Unknown";
-            break;
-    }
-    snprintf(state_str, sizeof(state_str), "Layer: %-8.8s", layer_name);
+  char *layer_name;
+  switch (biton32(layer_state)) {
+    case 0:
+      layer_name = "Default";
+      break;
+    case _NUMBER:
+      layer_name = "Number";
+      break;
+    case _FUNC:
+      layer_name = "Function";
+      break;
+    case _SYMBOL:
+      layer_name = "Symbol";
+      break;
+    case _REGEX:
+      layer_name = "Regex";
+      break;
+    case _SYSTEM:
+      layer_name = "System";
+      break;
+    default:
+      layer_name = "Unknown";
+      break;
+  }
+  snprintf(state_str, sizeof(state_str), "Layer: %-8.8s", layer_name);
 
-    return state_str;
+  return state_str;
 }
 
 static const char *get_mod_state(void) {
-    static char state_str[25];
+  static char state_str[25];
 
-    uint8_t modifiers = get_mods();
-    uint8_t one_shot  = get_oneshot_mods();
-    snprintf(state_str, sizeof(state_str), "Mod: %-3.3s %-3.3s %-3.3s %-3.3s",
-             (modifiers & MOD_MASK_SHIFT || one_shot & MOD_MASK_SHIFT) ? "SFT" : "",
-             (modifiers & MOD_MASK_ALT   || one_shot & MOD_MASK_ALT)   ? "ALT" : "",
-             (modifiers & MOD_MASK_CTRL  || one_shot & MOD_MASK_CTRL)  ? "CTL" : "",
-             (modifiers & MOD_MASK_GUI   || one_shot & MOD_MASK_GUI)   ? "GUI" : "");
+  uint8_t modifiers = get_mods();
+  uint8_t one_shot  = get_oneshot_mods();
+  snprintf(state_str, sizeof(state_str), "Mod: %-3.3s %-3.3s %-3.3s %-3.3s",
+           (modifiers & MOD_MASK_SHIFT || one_shot & MOD_MASK_SHIFT) ? "SFT" : "",
+           (modifiers & MOD_MASK_ALT   || one_shot & MOD_MASK_ALT)   ? "ALT" : "",
+           (modifiers & MOD_MASK_CTRL  || one_shot & MOD_MASK_CTRL)  ? "CTL" : "",
+           (modifiers & MOD_MASK_GUI   || one_shot & MOD_MASK_GUI)   ? "GUI" : "");
 
-    return state_str;
+  return state_str;
 }
 
 void matrix_scan_user(void) {
@@ -225,35 +225,35 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
     case QWERTY:
       if (record->event.pressed) {
-        persistent_default_layer_set(1UL<<_QWERTY);
+        persistent_default_layer_set(1UL << _QWERTY);
       }
       return false;
       break;
     case RGB_MOD:
-      #ifdef RGBLIGHT_ENABLE
-        if (record->event.pressed) {
-          rgblight_mode(RGB_current_mode);
-          rgblight_step();
-          RGB_current_mode = rgblight_config.mode;
-        }
-      #endif
+#ifdef RGBLIGHT_ENABLE
+      if (record->event.pressed) {
+        rgblight_mode(RGB_current_mode);
+        rgblight_step();
+        RGB_current_mode = rgblight_config.mode;
+      }
+#endif
       return false;
       break;
     case RGBRST:
-      #ifdef RGBLIGHT_ENABLE
-        if (record->event.pressed) {
-          eeconfig_update_rgblight_default();
-          rgblight_enable();
-          RGB_current_mode = rgblight_config.mode;
-        }
-      #endif
+#ifdef RGBLIGHT_ENABLE
+      if (record->event.pressed) {
+        eeconfig_update_rgblight_default();
+        rgblight_enable();
+        RGB_current_mode = rgblight_config.mode;
+      }
+#endif
       break;
     case SHKEYS:
       if (record->event.pressed) {
         show_keylog = !show_keylog;
       }
       break;
-    case VRSN: // Prints firmware version
+    case VRSN:  // Prints firmware version
       if (record->event.pressed) {
         send_string_with_delay_P(PSTR(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION ", Built on: " QMK_BUILDDATE), 5);
       }
