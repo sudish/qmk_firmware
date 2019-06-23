@@ -49,6 +49,11 @@ enum {
   _SYSTEM
 };
 
+// Tap dance
+enum {
+  TD_M_SYS = 0,
+};
+
 
 // Modifier/layer macros to ease using MT(), LT() and similar across multiple keyboards and keymaps.
 
@@ -67,6 +72,7 @@ enum {
 #define TG_SYS  TG(_SYSTEM)
 #define TO_DEFL TO(_QWERTY)
 
+#define TD_MSYS TD(TD_M_SYS)
 
 /*
 Blocks for each of the layers we use.
@@ -83,7 +89,7 @@ at once, rather than for each keyboard, one at a time.
 
 #define _________________QWERTY_R1_________________              KC_Y,    KC_U,    KC_I,    KC_O,    KC_P
 #define _________________QWERTY_R2_________________       HROW_R(KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN)
-#define _________________QWERTY_R3_________________              KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH
+#define _________________QWERTY_R3_________________              KC_N,    TD_MSYS, KC_COMM, KC_DOT,  KC_SLSH
 
 #define _________________QWERTY_B6_________________        BROW(KC_ESC,   KC_BSPC, KC_TAB,  KC_ENT,  KC_SPC,  KC_QUOT)
 
