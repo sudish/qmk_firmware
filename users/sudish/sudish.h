@@ -103,7 +103,7 @@ at once, rather than for each keyboard, one at a time.
 #define ________________NUMBER_R2__________________       HROW_R(KC_DOT,  KC_4,    KC_5,    KC_6,    KC_MINS)
 #define ________________NUMBER_R3__________________              KC_COMM, KC_1,    KC_2,    KC_3,    KC_PLUS
 
-#define ________________NUMBER_B6__________________              _______, _______, _______, _______, KC_0,    KC_PEQL
+#define ________________NUMBER_B6__________________              _______, _______, _______, KC_EQL,  KC_0,    _______
 
 
 #define ________________FUNC_L1____________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
@@ -117,7 +117,7 @@ at once, rather than for each keyboard, one at a time.
 #define ________________FUNC_B6____________________              _______, _______, _______, _______, _______, _______
 
 
-#define ________________SYMBOL_L1__________________              KC_NO,   KC_DOT,  KC_ASTR, KC_AMPR, KC_GRV
+#define ________________SYMBOL_L1__________________              KC_EQL,  KC_DOT,  KC_ASTR, KC_AMPR, KC_GRV
 #define ________________SYMBOL_L2__________________              KC_EXLM, KC_UNDS, KC_PERC, KC_MINS, KC_TILD
 #define ________________SYMBOL_L3__________________              KC_NO,   KC_PLUS, KC_AT,   KC_SLSH, KC_PIPE
 
@@ -125,18 +125,18 @@ at once, rather than for each keyboard, one at a time.
 #define ________________SYMBOL_R2__________________       HROW_R(KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO)
 #define ________________SYMBOL_R3__________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
 
-#define ________________SYMBOL_B6__________________              KC_BSLS, KC_DEL,  KC_EQL,  _______, _______, _______
+#define ________________SYMBOL_B6__________________              _______, KC_DEL,  _______, _______, _______, _______
 
 
 #define ________________REGEX_L1___________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
 #define ________________REGEX_L2___________________       HROW_L(KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO)
 #define ________________REGEX_L3___________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
 
-#define ________________REGEX_R1___________________              KC_ASTR, KC_LBRC, KC_CIRC, KC_RBRC, KC_PLUS
-#define ________________REGEX_R2___________________              KC_QUES, KC_LPRN, KC_DLR,  KC_RPRN, KC_DOT
-#define ________________REGEX_R3___________________              KC_PIPE, KC_LCBR, KC_HASH, KC_RCBR, KC_MINS
+#define ________________REGEX_R1___________________              KC_PIPE, KC_LBRC, KC_CIRC, KC_RBRC, KC_PLUS
+#define ________________REGEX_R2___________________              KC_DOT,  KC_LPRN, KC_DLR,  KC_RPRN, KC_EQL
+#define ________________REGEX_R3___________________              KC_ASTR, KC_LCBR, KC_HASH, KC_RCBR, KC_BSLS
 
-#define ________________REGEX_B6___________________              _______, _______, _______, KC_DEL,  KC_BSLS, _______
+#define ________________REGEX_B6___________________              _______, _______, _______, _______, _______, _______
 
 
 #define ________________SYSTEM_L1__________________              KC_BRIU, KC_HOME, KC_UP,   KC_END,  KC_PGUP
