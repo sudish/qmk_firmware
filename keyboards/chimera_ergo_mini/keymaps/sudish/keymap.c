@@ -72,10 +72,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 
-void matrix_scan_user(void) {
-  uint8_t layer = biton32(layer_state);
-
-  switch (layer) {
+layer_state_t layer_state_set_keymap(layer_state_t state) {
+  switch (biton32(state)) {
     case _QWERTY:
       set_led_blue;
       break;
@@ -98,6 +96,8 @@ void matrix_scan_user(void) {
       set_led_white;
       break;
   }
+
+  return state;
 };
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {

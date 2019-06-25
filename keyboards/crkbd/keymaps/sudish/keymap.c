@@ -259,5 +259,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       break;
   }
+
   return true;
 }
+
+#ifdef RGB_MATRIX_ENABLE
+void set_layer_rgb_indicator_keymap(uint8_t red, uint8_t green, uint8_t  blue) {
+    rgb_matrix_layer_helper(red, green, blue, LED_FLAG_UNDERGLOW);
+}
+#endif // RGB_MATRIX_ENABLE

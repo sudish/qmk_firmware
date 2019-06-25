@@ -46,7 +46,8 @@ enum {
   _FUNC,
   _SYMBOL,
   _REGEX,
-  _SYSTEM
+  _SYSTEM,
+  _N_LAYERS
 };
 
 // Tap dance
@@ -147,3 +148,7 @@ at once, rather than for each keyboard, one at a time.
 #define ________________SYSTEM_R3__________________              RGB_RMOD,RGB_HUD, RGB_SAD, RGB_VAD, KC_NO
 
 #define ________________SYSTEM_B6__________________              TO_DEFL, _______, _______, _______, _______, _______
+
+
+extern void set_layer_rgb_indicator_keymap(uint8_t r, uint8_t g, uint8_t b);
+extern void rgb_matrix_layer_helper(uint8_t red, uint8_t green, uint8_t blue, uint8_t led_type);
