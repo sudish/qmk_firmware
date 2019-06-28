@@ -93,10 +93,13 @@ void m_finished (qk_tap_dance_state_t *state, void *user_data) {
   mtap_state.state = cur_dance(state);
   switch (mtap_state.state) {
     case SINGLE_TAP:
-    case DOUBLE_HOLD: // Allow autorepeat on double tab and hold
+    case DOUBLE_HOLD: // Allow autorepeat on double tap and hold
       register_code(KC_M); break;
     case SINGLE_HOLD:
       register_mods(MOD_BIT(KC_RSFT)); layer_on(_SYSTEM); break;
+    case TRIPLE_TAP:
+      register_code(KC_M); unregister_code(KC_M);
+      /* FALL THROUGH */
     case DOUBLE_TAP:
     case DOUBLE_SINGLE_TAP:
       register_code(KC_M); unregister_code(KC_M); register_code(KC_M); break;
@@ -107,11 +110,12 @@ void m_reset (qk_tap_dance_state_t *state, void *user_data) {
   switch (mtap_state.state) {
     case SINGLE_TAP:
     case DOUBLE_HOLD:
+    case TRIPLE_TAP:
+    case DOUBLE_TAP:
+    case DOUBLE_SINGLE_TAP:
       unregister_code(KC_M); break;
     case SINGLE_HOLD:
       unregister_mods(MOD_BIT(KC_RSFT)); layer_off(_SYSTEM); break;
-    case DOUBLE_SINGLE_TAP:
-      unregister_code(KC_M); break;
   }
   mtap_state.state = 0;
 }
