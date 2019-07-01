@@ -2,6 +2,27 @@
 #include "sudish.h"
 
 
+/* Layers names */
+static const char *sj_layer_name[] = {
+    [_QWERTY]   = "Default",
+    [_NUMBER]   = "Number",
+    [_FUNC]     = "Function",
+    [_SYMBOL]   = "Symbol",
+    [_REGEX]    = "Regex",
+    [_SYSTEM]   = "System",
+    [_GAME]     = "Game",
+    [_GAMENF]   = "Game NF",
+    [_GAMENAV]  = "Game Nav",
+    [_ADJUST]   = "Adjust",
+    [_N_LAYERS] = "Unknown"
+};
+
+const char *get_layer_name(uint8_t layer) {
+    if (layer > _N_LAYERS) { layer = _N_LAYERS; };
+    return sj_layer_name[layer];
+}
+
+
 /* Layers to color map */
 #ifdef RGB_MATRIX_ENABLE
 typedef struct PACKED {
@@ -11,13 +32,17 @@ typedef struct PACKED {
 } sjRGB;
 
 sjRGB layer_to_color[] = {
-    [_QWERTY] = { RGB_WHITE },
-    [_NUMBER] = { RGB_GREEN },
-    [_FUNC]   = { RGB_SPRINGGREEN },
-    [_SYMBOL] = { RGB_CHARTREUSE },
-    [_REGEX]  = { RGB_TEAL },
-    [_SYSTEM] = { RGB_BLUE },
-    [_N_LAYERS] = { RGB_RED } // catch all color for unknown layer values
+    [_QWERTY]   = { RGB_WHITE },
+    [_NUMBER]   = { RGB_GREEN },
+    [_FUNC]     = { RGB_SPRINGGREEN },
+    [_SYMBOL]   = { RGB_CHARTREUSE },
+    [_REGEX]    = { RGB_TEAL },
+    [_SYSTEM]   = { RGB_BLUE },
+    [_GAME]     = { RGB_GOLD },
+    [_GAMENF]   = { RGB_GREEN },
+    [_GAMENAV]  = { RGB_GOLDENROD },
+    [_ADJUST]   = { RGB_MAGENTA },
+    [_N_LAYERS] = { RGB_RED }       // Catchall color for unknown layer values
 };
 
 __attribute__ ((weak))
@@ -29,7 +54,7 @@ void set_layer_rgb_indicator(uint8_t layer) {
     if (layer > _N_LAYERS) { layer = _N_LAYERS; };
     set_layer_rgb_indicator_keymap(layer_to_color[layer].r, layer_to_color[layer].g, layer_to_color[layer].b);
 }
-#endif // RGB_MATRIX_ENABLED
+#endif // RGB_MATRIX_ENABLE
 
 __attribute__ ((weak))
 layer_state_t layer_state_set_keymap(layer_state_t state) {
@@ -37,11 +62,9 @@ layer_state_t layer_state_set_keymap(layer_state_t state) {
 }
 
 layer_state_t layer_state_set_user(layer_state_t state) {
-    // state = update_tri_layer_state(state, _RAISE, _LOWER, _ADJUST);
-
 #ifdef RGB_MATRIX_ENABLE
     set_layer_rgb_indicator(biton32(state));
-#endif // RGB_MATRIX_ENABLED
+#endif // RGB_MATRIX_ENABLE
 
     return layer_state_set_keymap(state);
 }

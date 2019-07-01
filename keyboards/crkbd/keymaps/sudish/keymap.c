@@ -58,11 +58,39 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   ),
 
   [_SYSTEM] = LAYOUT_wrapper( \
-    RESET,   ________________SYSTEM_L1__________________,              ________________SYSTEM_R1__________________, RESET,
+    RESET,   ________________SYSTEM_L1__________________,              ________________SYSTEM_R1__________________, TO_ADJS,
     VRSN,    ________________SYSTEM_L2__________________,              ________________SYSTEM_R2__________________, EEP_RST,
     TG_SYS,  ________________SYSTEM_L3__________________,              ________________SYSTEM_R3__________________, SHKEYS,
                                            ________________SYSTEM_B6__________________
-  )
+  ),
+
+  [_GAME] = LAYOUT_wrapper( \
+    _6_KEY____________________GAME_L1___________________,              _________________GAME_R1___________________, TO_ADJS,
+    _6_KEY____________________GAME_L2___________________,              _________________GAME_R2___________________, KC_NO,
+    _6_KEY____________________GAME_L3___________________,              _________________GAME_R3___________________, TO_DEFL,
+                                           _________________GAME_B6___________________
+  ),
+
+  [_GAMENF] = LAYOUT_wrapper( \
+    KC_TAB,  ________________GAMENF_L1__________________,              _________________GAME_R1___________________, TO_ADJS,
+    KC_LSFT, ________________GAMENF_L2__________________,              _________________GAME_R2___________________, KC_NO,
+    KC_RCTL, ________________GAMENF_L3__________________,              _________________GAME_R3___________________, TO_DEFL,
+                                           _________________GAME_B6___________________
+  ),
+
+  [_GAMENAV] = LAYOUT_wrapper( \
+    KC_TAB,  ________________GAMENAV_1__________________,              ________________GAMENAV_1__________________, TO_ADJS,
+    KC_LSFT, ________________GAMENAV_2__________________,              ________________GAMENAV_2__________________, KC_NO,
+    KC_RCTL, ________________GAMENAV_3__________________,              ________________GAMENAV_3__________________, TO_DEFL,
+                                           _________________GAME_B6___________________
+  ),
+
+  [_ADJUST] = LAYOUT_wrapper( \
+    RESET,   ________________ADJUST_L1__________________,              ________________ADJUST_R1__________________, RESET,
+    VRSN,    ________________ADJUST_L2__________________,              ________________ADJUST_R2__________________, EEP_RST,
+    TO_DEFL, ________________ADJUST_L3__________________,              ________________ADJUST_R3__________________, TO_DEFL,
+                                           ________________ADJUST_B6__________________
+  ),
 };
 
 int RGB_current_mode;
@@ -70,15 +98,6 @@ int RGB_current_mode;
 void persistent_default_layer_set(uint16_t default_layer) {
   eeconfig_update_default_layer(default_layer);
   default_layer_set(default_layer);
-}
-
-// Setting ADJUST layer RGB back to default
-void update_tri_layer_RGB(uint8_t layer1, uint8_t layer2, uint8_t layer3) {
-  if (IS_LAYER_ON(layer1) && IS_LAYER_ON(layer2)) {
-    layer_on(layer3);
-  } else {
-    layer_off(layer3);
-  }
 }
 
 void matrix_init_user(void) {
@@ -137,31 +156,8 @@ static const char *read_logo(void) {
 static const char *get_layer_state(void) {
   static char state_str[25];
 
-  char *layer_name;
-  switch (biton32(layer_state)) {
-    case 0:
-      layer_name = "Default";
-      break;
-    case _NUMBER:
-      layer_name = "Number";
-      break;
-    case _FUNC:
-      layer_name = "Function";
-      break;
-    case _SYMBOL:
-      layer_name = "Symbol";
-      break;
-    case _REGEX:
-      layer_name = "Regex";
-      break;
-    case _SYSTEM:
-      layer_name = "System";
-      break;
-    default:
-      layer_name = "Unknown";
-      break;
-  }
-  snprintf(state_str, sizeof(state_str), "Layer: %-8.8s", layer_name);
+  const char *layer_name = get_layer_name(biton32(layer_state));
+  snprintf(state_str, sizeof(state_str), "Layer: %-10.10s", layer_name);
 
   return state_str;
 }
@@ -229,25 +225,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       return false;
       break;
-    case RGB_MOD:
-#ifdef RGBLIGHT_ENABLE
-      if (record->event.pressed) {
-        rgblight_mode(RGB_current_mode);
-        rgblight_step();
-        RGB_current_mode = rgblight_config.mode;
-      }
-#endif
-      return false;
-      break;
-    case RGBRST:
-#ifdef RGBLIGHT_ENABLE
-      if (record->event.pressed) {
-        eeconfig_update_rgblight_default();
-        rgblight_enable();
-        RGB_current_mode = rgblight_config.mode;
-      }
-#endif
-      break;
     case SHKEYS:
       if (record->event.pressed) {
         show_keylog = !show_keylog;
@@ -257,6 +234,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       if (record->event.pressed) {
         send_string_with_delay_P(PSTR(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION ", Built on: " QMK_BUILDDATE), 5);
       }
+      return false;
       break;
   }
 
