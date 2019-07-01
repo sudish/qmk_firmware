@@ -38,6 +38,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Reduce power draw from LEDs, max value is 255
 #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 207
 
+#define RGB_DISABLE_WHEN_USB_SUSPENDED true
+
 // Mode for the RGB layer indicator
 #define RGB_LAYER_INDICATOR_MODE RGB_MATRIX_CUSTOM_only_underglow
 #define RGB_MATRIX_STARTUP_MODE RGB_LAYER_INDICATOR_MODE

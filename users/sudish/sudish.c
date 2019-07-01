@@ -71,6 +71,18 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     return layer_state_set_keymap(state);
 }
 
+void suspend_power_down_user(void) {
+#ifdef RGB_MATRIX_ENABLE
+    rgb_matrix_set_suspend_state(true);
+#endif // RGB_MATRIX_ENABLE
+}
+
+void suspend_wakeup_init_user(void) {
+#ifdef RGB_MATRIX_ENABLE
+    rgb_matrix_set_suspend_state(false);
+#endif // RGB_MATRIX_ENABLE
+}
+
 void keyboard_post_init_user(void) {
     // Simulate a layer change to the default at startup so hooks can run
     layer_state_set_user(1UL << _QWERTY);
@@ -86,7 +98,9 @@ void keyboard_post_init_user(void) {
 extern led_config_t g_led_config;
 
 void rgb_matrix_layer_helper(uint8_t red, uint8_t green, uint8_t blue, uint8_t led_type) {
-    if (rgb_matrix_config.enable && (rgb_matrix_config.mode == RGB_LAYER_INDICATOR_MODE)) {
+    if (rgb_matrix_config.enable
+            && (rgb_matrix_config.mode == RGB_LAYER_INDICATOR_MODE)
+            && !g_suspend_state) {
         for (int i = 0; i < DRIVER_LED_TOTAL; i++) {
             if (HAS_ANY_FLAGS(g_led_config.flags[i], led_type)) {
                 rgb_matrix_set_color(i, red, green, blue);
