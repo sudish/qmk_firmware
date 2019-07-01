@@ -2,7 +2,7 @@
 #include "sudish.h"
 
 
-/* Layers names */
+/* Layer names */
 static const char *sj_layer_name[] = {
     [_QWERTY]   = "Default",
     [_NUMBER]   = "Number",
@@ -25,6 +25,8 @@ const char *get_layer_name(uint8_t layer) {
 
 /* Layers to color map */
 #ifdef RGB_MATRIX_ENABLE
+extern rgb_config_t rgb_matrix_config;
+
 typedef struct PACKED {
 	uint8_t r;
 	uint8_t g;
@@ -72,15 +74,24 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 void keyboard_post_init_user(void) {
     // Simulate a layer change to the default at startup so hooks can run
     layer_state_set_user(1UL << _QWERTY);
+
+#ifdef RGB_MATRIX_ENABLE
+    // Don't write to the EEPROM unless needed
+    if (!rgb_matrix_config.enable) { rgb_matrix_enable(); }
+    if (rgb_matrix_config.mode != RGB_LAYER_INDICATOR_MODE) { rgb_matrix_mode(RGB_LAYER_INDICATOR_MODE); }
+#endif // RGB_MATRIX_ENABLE
 }
 
 #ifdef RGB_MATRIX_ENABLE
 extern led_config_t g_led_config;
+
 void rgb_matrix_layer_helper(uint8_t red, uint8_t green, uint8_t blue, uint8_t led_type) {
-    for (int i = 0; i < DRIVER_LED_TOTAL; i++) {
-        if (HAS_ANY_FLAGS(g_led_config.flags[i], led_type)) {
-            rgb_matrix_set_color(i, red, green, blue);
+    if (rgb_matrix_config.enable && (rgb_matrix_config.mode == RGB_LAYER_INDICATOR_MODE)) {
+        for (int i = 0; i < DRIVER_LED_TOTAL; i++) {
+            if (HAS_ANY_FLAGS(g_led_config.flags[i], led_type)) {
+                rgb_matrix_set_color(i, red, green, blue);
+            }
         }
     }
 }
-#endif
+#endif // RGB_MATRIX_ENABLE

@@ -6,6 +6,18 @@ endif
 
 LINK_TIME_OPTIMIZATION_ENABLE = yes
 
+RGB_MATRIX_ENABLE ?= no
+ifneq ($(strip $(RGB_MATRIX_ENABLE)), no)
+    ifneq ("$(wildcard $(USER_PATH)/rgb_matrix_user.inc)","")
+        RGB_MATRIX_CUSTOM_USER ?= yes
+    endif
+endif
+
+ifeq ($(strip $(TAP_DANCE_ENABLE)), yes)
+    SRC += tap_dances.c
+endif
+
+
 # ifneq ("$(wildcard $(USER_PATH)/secrets.c)","")
 #     SRC += secrets.c
 # endif
@@ -13,10 +25,6 @@ LINK_TIME_OPTIMIZATION_ENABLE = yes
 # ifeq ($(strip $(NO_SECRETS)), yes)
 #     OPT_DEFS += -DNO_SECRETS
 # endif
-
-ifeq ($(strip $(TAP_DANCE_ENABLE)), yes)
-    SRC += tap_dances.c
-endif
 
 # ifeq ($(strip $(RGBLIGHT_ENABLE)), yes)
 #     SRC += rgb_stuff.c
@@ -33,12 +41,6 @@ endif
 #         OPT_DEFS += -DRGBLIGHT_STARTUP_ANIMATION
 #     endif
 # endif
-
-# RGB_MATRIX_ENABLE ?= no
-# ifneq ($(strip $(RGB_MATRIX_ENABLE)), no)
-#     SRC += rgb_stuff.c
-# endif
-
 
 # ifeq ($(strip $(MACROS_ENABLED)), yes)
 #     OPT_DEFS += -DMACROS_ENABLED

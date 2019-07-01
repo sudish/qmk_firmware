@@ -10,10 +10,10 @@
 
 #include "version.h"
 
-extern keymap_config_t keymap_config;
 extern uint8_t is_master;
-#ifdef RGBLIGHT_ENABLE
-extern rgblight_config_t rgblight_config; // allows macro to read current RGB settings
+
+#ifdef RGB_MATRIX_ENABLE
+extern rgb_config_t rgb_matrix_config;
 #endif
 
 
@@ -93,17 +93,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   ),
 };
 
-int RGB_current_mode;
-
 void persistent_default_layer_set(uint16_t default_layer) {
   eeconfig_update_default_layer(default_layer);
   default_layer_set(default_layer);
 }
 
 void matrix_init_user(void) {
-#ifdef RGBLIGHT_ENABLE
-  RGB_current_mode = rgblight_config.mode;
-#endif
 // SSD1306 OLED init, make sure to add #define SSD1306OLED in config.h
 #ifdef SSD1306OLED
   iota_gfx_init(!has_usb());  // turns on the display
@@ -218,24 +213,28 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   }
 #endif
 
-  switch (keycode) {
+  if (record->event.pressed) {
+    switch (keycode) {
     case QWERTY:
-      if (record->event.pressed) {
-        persistent_default_layer_set(1UL << _QWERTY);
-      }
+      persistent_default_layer_set(1UL << _QWERTY);
       return false;
-      break;
     case SHKEYS:
-      if (record->event.pressed) {
-        show_keylog = !show_keylog;
-      }
-      break;
-    case VRSN:  // Prints firmware version
-      if (record->event.pressed) {
-        send_string_with_delay_P(PSTR(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION ", Built on: " QMK_BUILDDATE), 5);
-      }
+      show_keylog = !show_keylog;
       return false;
-      break;
+    case VRSN:
+      send_string_with_delay_P(PSTR(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION ", Built on: " QMK_BUILDDATE), 5);
+      return false;
+#ifdef RGB_MATRIX_ENABLE
+    case RGB_MODE_FORWARD ... RGB_MODE_GRADIENT:    // from quantum_keycodes.h
+      if (rgb_matrix_config.mode == RGB_LAYER_INDICATOR_MODE) {
+        layer_state_set_user(layer_state);          // run the RGB layer hook right away
+      }
+      else {
+        set_layer_rgb_indicator_keymap(0, 0, 0);    // blank the layer LEDs
+      }
+      break;                                        // must allow keycode to be processed
+#endif // RGB_MATRIX_ENABLE
+    }
   }
 
   return true;
