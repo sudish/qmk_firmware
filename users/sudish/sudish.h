@@ -47,8 +47,8 @@ enum {
   _REGEX,
   _SYSTEM,
   _GAME,
-  _GAMENF,
   _GAMENAV,
+  _GAMENF,
   _ADJUST,      // Highest layer so it gets priority
   _N_LAYERS
 };
@@ -67,16 +67,15 @@ enum {
 // Bottom row
 #define BROW(K1, K2, K3, K4, K5, K6)         LGUI_T(K1), LCTL_T(K2), LALT_T(K3), RALT_T(K4), RCTL_T(K5), RGUI_T(K6)
 
-
 // Layer on/off toggle/switch
 #define TG_NUM  TG(_NUMBER)
 #define TG_FUNC TG(_FUNC)
 #define TG_SYM  TG(_SYMBOL)
 #define TG_REGX TG(_REGEX)
 #define TG_SYS  TG(_SYSTEM)
+#define TG_ADJS TG(_ADJUST)
 
 #define TO_DEFL TO(_QWERTY)
-#define TO_ADJS TO(_ADJUST)
 #define TO_GAME TO(_GAME)
 #define TO_GMNV TO(_GAMENAV)
 
@@ -156,7 +155,7 @@ at once, rather than for each keyboard, one at a time.
 #define ________________SYSTEM_R2__________________       HROW_R(KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, KC_NO)
 #define ________________SYSTEM_R3__________________              RGB_RMOD,RGB_HUD, RGB_SAD, RGB_VAD, KC_NO
 
-#define ________________SYSTEM_B6__________________              TO_DEFL, _______, _______, _______, _______, TO_ADJS
+#define ________________SYSTEM_B6__________________              TG_ADJS, _______, _______, _______, _______, TO_DEFL
 
 #define ________________ADJUST_L1__________________              TO_GAME, TO_GMNV, KC_NO,   KC_NO,   KC_NO
 #define ________________ADJUST_L2__________________              TO_DEFL, KC_NO,   KC_NO,   KC_NO,   KC_NO
@@ -166,31 +165,34 @@ at once, rather than for each keyboard, one at a time.
 #define ________________ADJUST_R2__________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
 #define ________________ADJUST_R3__________________              RGB_RMOD,RGB_HUD, RGB_SAD, RGB_VAD, KC_NO
 
-#define ________________ADJUST_B6__________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
+#define ________________ADJUST_B6__________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   TO_DEFL
 /*
 Special gaming layouts, these have no relation to normal layouts
 */
 
+#define ARROWS1(K1, K2, K3, K4, K5)           K1, K2,      KC_UP,   K4,      K5
+#define ARROWS2(K1, K2, K3, K4, K5)           K1, KC_LEFT, KC_DOWN, KC_RGHT, K5
+
 // Base left rotates QWERT by one column so we don't have to remap WASD to ESDF
-#define _6_KEY____________________GAME_L1___________________              KC_T,    KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R
-#define _6_KEY____________________GAME_L2___________________       LSFT_T(KC_G),   KC_LSFT, KC_A,    KC_S,    KC_D,    KC_F
-#define _6_KEY____________________GAME_L3___________________       LCTL_T(KC_B),   KC_RCTL, KC_Z,    KC_X,    KC_C,    KC_V
+#define _________________GAME_L1___________________              KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R
+#define _________________GAME_L2___________________              KC_LSFT, KC_A,    KC_S,    KC_D,    KC_F
+#define _________________GAME_L3___________________              KC_LCTL, KC_Z,    KC_X,    KC_C,    KC_V
 
 #define _________________GAME_R1___________________              KC_Y,    KC_U,    KC_I,    KC_O,    KC_P
 #define _________________GAME_R2___________________              KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN
 #define _________________GAME_R3___________________              KC_N,    TD_MSYS, KC_COMM, KC_DOT,  KC_SLSH
 
+// Nav keys
+#define ________________GAMENAV_R1_________________      ARROWS1(KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R)
+#define ________________GAMENAV_R2_________________      ARROWS2(KC_LSFT, KC_A,    KC_S,    KC_D,    KC_F)
+#define ________________GAMENAV_R3_________________              KC_LCTL, KC_Z,    KC_X,    KC_C,    KC_V
+
 // A number and function key layer for one handed left half
 #define ________________GAMENF_L1__________________              KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5
-#define ________________GAMENF_L2__________________              KC_1,    KC_2,    KC_3,    KC_4,    KC_5
+#define ________________GAMENF_L2__________________       LSFT_T(KC_1),   KC_2,    KC_3,    KC_4,    KC_5
 #define ________________GAMENF_L3__________________       LCTL_T(KC_NO),  KC_6,    KC_7,    KC_F6,   KC_F7
 
-// Nav keys
-#define ________________GAMENAV_1__________________              KC_BRIU, KC_HOME, KC_UP,   KC_END,  KC_PGUP
-#define ________________GAMENAV_2__________________              KC_BRID, KC_LEFT, KC_DOWN, KC_RGHT, KC_PGDN
-#define ________________GAMENAV_3__________________              KC_NO,   KC_MUTE, KC_VOLD, KC_VOLU, KC_MNXT
-
-#define _________________GAME_B6___________________      LM(_GAMENF,MOD_LSFT), KC_SPC, MO(_GAMENF),  KC_ENT,  KC_SPC,  KC_ESC
+#define _________________GAME_B6___________________      LM(_GAMENF,MOD_LSFT), KC_SPC, MO(_GAMENF),  KC_ENT,  KC_SPC,  TO_DEFL
 
 
 extern const char *get_layer_name(uint8_t layer);

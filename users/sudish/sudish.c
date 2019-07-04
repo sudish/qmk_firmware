@@ -11,8 +11,8 @@ static const char *sj_layer_name[] = {
     [_REGEX]    = "Regex",
     [_SYSTEM]   = "System",
     [_GAME]     = "Game",
-    [_GAMENF]   = "Game NF",
     [_GAMENAV]  = "Game Nav",
+    [_GAMENF]   = "Game NF",
     [_ADJUST]   = "Adjust",
     [_N_LAYERS] = "Unknown"
 };
@@ -41,8 +41,8 @@ sjRGB layer_to_color[] = {
     [_REGEX]    = { RGB_TEAL },
     [_SYSTEM]   = { RGB_BLUE },
     [_GAME]     = { RGB_GOLD },
-    [_GAMENF]   = { RGB_GREEN },
     [_GAMENAV]  = { RGB_GOLDENROD },
+    [_GAMENF]   = { RGB_GREEN },
     [_ADJUST]   = { RGB_MAGENTA },
     [_N_LAYERS] = { RGB_RED }       // Catchall color for unknown layer values
 };
