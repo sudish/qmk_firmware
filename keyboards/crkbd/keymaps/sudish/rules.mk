@@ -21,7 +21,7 @@ SLEEP_LED_ENABLE = no    # Breathing sleep LED during USB suspend
 
 RGBLIGHT_ENABLE = no        # Enable WS2812 RGB underlight.
 RGB_MATRIX_ENABLE = WS2812
-TAP_DANCE_ENABLE = yes
+TAP_DANCE_ENABLE = no
 
 LINK_TIME_OPTIMIZATION_ENABLE = yes
 

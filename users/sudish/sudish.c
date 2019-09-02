@@ -5,10 +5,10 @@
 /* Layer names */
 static const char *sj_layer_name[] = {
     [_QWERTY]   = "Default",
-    [_NUMBER]   = "Number",
-    [_FUNC]     = "Function",
-    [_SYMBOL]   = "Symbol",
-    [_REGEX]    = "Regex",
+    [_NUMBER_L] = "Number L",
+    [_NUMBER_R] = "Number R",
+    [_SYMBOL_L] = "Symbol L",
+    [_SYMBOL_R] = "Symbol R",
     [_SYSTEM]   = "System",
     [_GAME]     = "Game",
     [_GAMENAV]  = "Game Nav",
@@ -35,10 +35,10 @@ typedef struct PACKED {
 
 sjRGB layer_to_color[] = {
     [_QWERTY]   = { RGB_WHITE },
-    [_NUMBER]   = { RGB_GREEN },
-    [_FUNC]     = { RGB_SPRINGGREEN },
-    [_SYMBOL]   = { RGB_CHARTREUSE },
-    [_REGEX]    = { RGB_TEAL },
+    [_NUMBER_L] = { RGB_GREEN },
+    [_NUMBER_R] = { RGB_GREEN },
+    [_SYMBOL_L] = { RGB_TEAL },
+    [_SYMBOL_R] = { RGB_TEAL },
     [_SYSTEM]   = { RGB_BLUE },
     [_GAME]     = { RGB_GOLD },
     [_GAMENAV]  = { RGB_GOLDENROD },
