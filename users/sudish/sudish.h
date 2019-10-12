@@ -87,8 +87,9 @@ Organized so we can quickly adapt and modify all of them
 at once, rather than for each keyboard, one at a time.
 */
 
-#define ___________________BLANK___________________              _______, _______, _______, _______, _______
 #define ___________________KC_NO___________________              KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO
+#define ___________________PASS____________________              _______, _______, _______, _______, _______
+#define          _________PASS_B3_________                       _______, _______, _______
 #define __________________PASS_B6__________________              _______, _______, _______, _______, _______, _______
 #define _______________HROW_L_NO___________________       HROW_L(KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO)
 #define _______________HROW_R_NO___________________       HROW_R(KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO)
@@ -105,8 +106,8 @@ at once, rather than for each keyboard, one at a time.
 #define _________________QWERTY_R3_________________              KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH
 
 #define _________________QWERTY_B6_________________         BROW(KC_ESC,   KC_BSPC, KC_TAB,  KC_ENT,  KC_SPC,  KC_QUOT)
-#define _________________QWERTY_B3_R_______________      BROW_R3(KC_ENT,   KC_SPC,  KC_QUOT)
-#define _________________QWERTY_B3_L_______________      BROW_L3(KC_ESC,   KC_BSPC, KC_TAB)
+#define          ________QWERTY_B3_R______               BROW_R3(KC_ENT,   KC_SPC,  KC_QUOT)
+#define          ________QWERTY_B3_L______               BROW_L3(KC_ESC,   KC_BSPC, KC_TAB)
 
 
 #define ________________NUMBER_L1__________________              KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5
