@@ -184,9 +184,10 @@ Special gaming layouts, these have no relation to normal layouts
 
 
 extern const char *get_layer_name(uint8_t layer);
+#ifdef RGB_MATRIX_ENABLE
 extern void set_layer_rgb_indicator_keymap(uint8_t r, uint8_t g, uint8_t b);
 extern void rgb_matrix_layer_helper(uint8_t red, uint8_t green, uint8_t blue, uint8_t led_type);
-
+#endif // RGB_MATRIX_ENABLE
 
 #if 0
 // Original Numpad / Regexp / Symbol / Func setup
