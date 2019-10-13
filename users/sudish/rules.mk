@@ -1,10 +1,8 @@
-
 ifneq ("$(wildcard $(USER_PATH)/sudish.c)","")
     SRC += sudish.c
 endif
 
-LINK_TIME_OPTIMIZATION_ENABLE = yes
-SPACE_CADET_ENABLE            = no
+SPACE_CADET_ENABLE = no
 
 RGB_MATRIX_ENABLE ?= no
 ifneq ($(strip $(RGB_MATRIX_ENABLE)), no)
