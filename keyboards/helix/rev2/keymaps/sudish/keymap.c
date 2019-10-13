@@ -11,14 +11,8 @@
   #include "ssd1306.h"
 #endif
 
+#include "version.h"
 #include "sudish.h"
-
-extern keymap_config_t keymap_config;
-
-#ifdef RGBLIGHT_ENABLE
-//Following line allows macro to read current RGB settings
-extern rgblight_config_t rgblight_config;
-#endif
 
 extern uint8_t is_master;
 
@@ -67,8 +61,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_SYSTEM] = LAYOUT_wrapper( \
       RESET,   ___________________PASS____________________,                   ___________________PASS____________________, TG_ADJS, \
-      VRSN,    ________________SYSTEM_L1__________________,                   ________________SYSTEM_R1__________________, EEP_RST, \
-      _______, ________________SYSTEM_L2__________________,                   ________________SYSTEM_R2__________________, _______, \
+      EEP_RST, ________________SYSTEM_L1__________________,                   ________________SYSTEM_R1__________________, EEP_RST, \
+      VRSN,    ________________SYSTEM_L2__________________,                   ________________SYSTEM_R2__________________, _______, \
       _______, ________________SYSTEM_L3__________________, _______, _______, ________________SYSTEM_R3__________________, _______, \
       TG_SYS,  _______, _______, _______, _________PASS_B3_________, _________PASS_B3_________, _______, _______, _______, SHKEYS   \
       )
@@ -85,9 +79,6 @@ float tone_plover_gb[][2]  = SONG(PLOVER_GOODBYE_SOUND);
 float music_scale[][2]     = SONG(MUSIC_SCALE_SOUND);
 #endif
 
-// define variables for reactive RGB
-bool TOG_STATUS = false;
-int RGB_current_mode;
 
 void persistent_default_layer_set(uint16_t default_layer) {
   eeconfig_update_default_layer(default_layer);
@@ -95,6 +86,16 @@ void persistent_default_layer_set(uint16_t default_layer) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  if (record->event.pressed) {
+    switch (keycode) {
+    case QWERTY:
+      persistent_default_layer_set(1UL << _QWERTY);
+      return false;
+    case VRSN:
+      send_string_with_delay_P(PSTR(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION ", Built on: " QMK_BUILDDATE), 5);
+      return false;
+    }
+  }
   return true;
 }
 
@@ -146,13 +147,6 @@ void matrix_update(struct CharacterMatrix *dest, const struct CharacterMatrix *s
   }
 }
 
-//assign the right code to your layers for OLED display
-#define L_BASE 0
-#define L_LOWER (1<<_LOWER)
-#define L_RAISE (1<<_RAISE)
-#define L_ADJUST (1<<_ADJUST)
-#define L_ADJUST_TRI (L_ADJUST|L_RAISE|L_LOWER)
-
 static void render_logo(struct CharacterMatrix *matrix) {
   static char logo[]={
     0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87,0x88,0x89,0x8a,0x8b,0x8c,0x8d,0x8e,0x8f,0x90,0x91,0x92,0x93,0x94,
@@ -160,7 +154,6 @@ static void render_logo(struct CharacterMatrix *matrix) {
     0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,0xc8,0xc9,0xca,0xcb,0xcc,0xcd,0xce,0xcf,0xd0,0xd1,0xd2,0xd3,0xd4,
     0};
   matrix_write(matrix, logo);
-  //matrix_write_P(&matrix, PSTR(" Split keyboard kit"));
 }
 
 static const char *get_layer_state(void) {
@@ -187,34 +180,16 @@ static const char *get_mod_state(void) {
 }
 
 void render_status(struct CharacterMatrix *matrix) {
-  // Render to mode icon
-  static char logo[][2][3]={{{0x95,0x96,0},{0xb5,0xb6,0}},{{0x97,0x98,0},{0xb7,0xb8,0}}};
-  if (keymap_config.swap_lalt_lgui) {
-    matrix_write(matrix, logo[1][0]);
+    matrix_write(matrix, get_layer_state());
     matrix_write_P(matrix, PSTR("\n"));
-    matrix_write(matrix, logo[1][1]);
-  } else {
-    matrix_write(matrix, logo[0][0]);
-    matrix_write_P(matrix, PSTR("\n"));
-    matrix_write(matrix, logo[0][1]);
-  }
-
-    matrix_write_P(matrix, get_layer_state());
-    matrix_write_P(matrix, PSTR("\n"));
-    matrix_write_P(matrix, get_mod_state());
+    matrix_write(matrix, get_mod_state());
 }
 
 void iota_gfx_task_user(void) {
   struct CharacterMatrix matrix;
 
-#if DEBUG_TO_SCREEN
-  if (debug_enable) {
-    return;
-  }
-#endif
-
   matrix_clear(&matrix);
-  if (is_master){
+  if (is_master) {
     render_status(&matrix);
   } else {
     render_logo(&matrix);
