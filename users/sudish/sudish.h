@@ -134,7 +134,7 @@ at once, rather than for each keyboard, one at a time.
 
 #define ________________SYSTEM_L1__________________              KC_BRIU, KC_VOLU, KC_MUTE, KC_MNXT, KC_NO
 #define ________________SYSTEM_L2__________________              KC_BRID, KC_VOLD, KC_MPLY, KC_MPRV, KC_NO
-#define ________________SYSTEM_L3__________________              TG_ADJS, KC_PSCR, KC_PAUS, KC_SLCK, TO_DEFL
+#define ________________SYSTEM_L3__________________              TG_ADJS, KC_PSCR, KC_PAUS, KC_SCRL, TO_DEFL
 
 #define ________________SYSTEM_R1__________________              KC_PGUP, KC_HOME, KC_UP,   KC_END,  KC_INS
 #define ________________SYSTEM_R2__________________              KC_PGDN, KC_LEFT, KC_DOWN, KC_RGHT, KC_DEL
