@@ -20,11 +20,11 @@ extern uint8_t is_master;
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_QWERTY] = LAYOUT_wrapper( \
-      KC_ESC,  _________________QWERTY_LNUM_______________,                   _________________QWERTY_RNUM_______________, KC_DEL, \
-      KC_TAB,  _________________QWERTY_L1_________________,                   _________________QWERTY_R1_________________, KC_BSPC, \
+      KC_ESC,  _________________QWERTY_LNUM_______________,                   _________________QWERTY_RNUM_______________, KC_BSPC, \
+      KC_TAB,  _________________QWERTY_L1_________________,                   _________________QWERTY_R1_________________, KC_DEL,  \
       KC_CAPS, _________________QWERTY_L2_________________,                   _________________QWERTY_R2_________________, KC_QUOT, \
-      TG_SYS,  _________________QWERTY_L3_________________, KC_LBRC, KC_RBRC, _________________QWERTY_R3_________________, TG_SYS, \
-      KC_LEFT, KC_UP,   KC_DOWN, KC_RGHT, ________QWERTY_B3_L______, ________QWERTY_B3_R______, KC_LEFT, KC_UP,   KC_DOWN, KC_RGHT \
+      TG_SYS,  _________________QWERTY_L3_________________, KC_LBRC, KC_RBRC, _________________QWERTY_R3_________________, TG_SYS,  \
+      KC_LEFT, KC_UP,   KC_DOWN, KC_RGHT, ________QWERTY_B3_L______, ________QWERTY_B3_R______, KC_LEFT, KC_UP,   KC_DOWN, KC_RGHT  \
       ),
 
   [_NUMBER_L] = LAYOUT_wrapper( \
