@@ -1,5 +1,15 @@
+# Copyright 2019 Manna Harbour
+# https://github.com/manna-harbour/miryoku
 
-# generated from users/manna-harbour_miryoku/miryoku.org
+MOUSEKEY_ENABLE = yes
+EXTRAKEY_ENABLE = yes
+AUTO_SHIFT_ENABLE = yes
+TAP_DANCE_ENABLE = yes
+CAPS_WORD_ENABLE = yes
+KEY_OVERRIDE_ENABLE = yes
 
-MOUSEKEY_ENABLE = yes        # Mouse keys(+4700)
-EXTRAKEY_ENABLE = yes        # Audio control and System control(+450)
+INTROSPECTION_KEYMAP_C = manna-harbour_miryoku.c # keymaps
+
+include users/manna-harbour_miryoku/custom_rules.mk
+
+include users/manna-harbour_miryoku/post_rules.mk

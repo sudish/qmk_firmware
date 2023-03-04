@@ -5,6 +5,9 @@
 // Timer to detect tap/hold on NEO_RMOD3 key
 static uint16_t neo3_timer;
 // State bitmap to track which key(s) enabled NEO_3 layer
+// Bit 1 = LMOD state
+// Bit 2 = RMOD state
+// Bit 3 = Seen other keypress
 static uint8_t neo3_state = 0;
 // State bitmap to track key combo for CAPSLOCK
 static uint8_t capslock_state = 0;
@@ -54,12 +57,12 @@ enum custom_keycodes {
 #define US_OSX_CENT                 LALT(KC_4)                  // ¢
 #define US_OSX_YEN                  LALT(KC_Y)                  // ¥
 #define US_OSX_SBQUO                LALT(LSFT(KC_0))            // ‚
-#define US_OSX_LEFT_SINGLE_QUOTE    LALT(KC_RBRACKET)           // ‘
-#define US_OSX_RIGHT_SINGLE_QUOTE   LALT(LSFT(KC_RBRACKET))     // ’
-#define US_OSX_ELLIPSIS             LALT(KC_SCOLON)             // …
+#define US_OSX_LEFT_SINGLE_QUOTE    LALT(KC_RBRC)               // ‘
+#define US_OSX_RIGHT_SINGLE_QUOTE   LALT(LSFT(KC_RBRC))         // ’
+#define US_OSX_ELLIPSIS             LALT(KC_SCLN)               // …
 #define US_OSX_UNDERSCORE           LSFT(KC_MINUS)              // _
-#define US_OSX_LBRACKET             KC_LBRACKET                 // [
-#define US_OSX_RBRACKET             KC_RBRACKET                 // ]
+#define US_OSX_LBRACKET             KC_LBRC                     // [
+#define US_OSX_RBRACKET             KC_RBRC                     // ]
 #define US_OSX_CIRCUMFLEX           LSFT(KC_6)                  // ^
 #define US_OSX_EXCLAMATION          LSFT(KC_1)                  // !
 #define US_OSX_LESSTHAN             LSFT(KC_COMMA)              // <
@@ -67,26 +70,26 @@ enum custom_keycodes {
 #define US_OSX_EQUAL                KC_EQUAL                    // =
 #define US_OSX_AMPERSAND            LSFT(KC_7)                  // &
 #define US_OSX_SMALL_LONG_S         KC_NO                       // ſ
-#define US_OSX_BSLASH               KC_BSLASH
+#define US_OSX_BSLASH               KC_BACKSLASH
 #define US_OSX_SLASH                KC_SLASH                    // /
-#define US_OSX_CLBRACKET            LSFT(KC_LBRACKET)           // {
-#define US_OSX_CRBRACKET            LSFT(KC_RBRACKET)           // }
+#define US_OSX_CLBRACKET            LSFT(KC_LBRC)               // {
+#define US_OSX_CRBRACKET            LSFT(KC_RBRC)               // }
 #define US_OSX_ASTERISK             LSFT(KC_8)                  // *
 #define US_OSX_QUESTIONMARK         LSFT(KC_SLASH)              // ?
 #define US_OSX_LPARENTHESES         LSFT(KC_9)                  // (
 #define US_OSX_RPARENTHESES         LSFT(KC_0)                  // )
 #define US_OSX_HYPHEN_MINUS         KC_MINUS                    // -
-#define US_OSX_COLON                LSFT(KC_SCOLON)             // :
+#define US_OSX_COLON                LSFT(KC_SCLN)               // :
 #define US_OSX_AT                   LSFT(KC_2)                  // @
 #define US_OSX_HASH                 LSFT(KC_3)                  // #
-#define US_OSX_PIPE                 LSFT(KC_BSLASH)             // |
+#define US_OSX_PIPE                 LSFT(KC_BACKSLASH)          // |
 #define US_OSX_TILDE                LSFT(KC_GRAVE)              // ~
 #define US_OSX_BACKTICK             KC_GRAVE                    // `
 #define US_OSX_PLUS                 LSFT(KC_EQUAL)              // +
 #define US_OSX_PERCENT              LSFT(KC_5)                  // %
 #define US_OSX_DOUBLE_QUOTE         LSFT(KC_QUOTE)              // "
 #define US_OSX_SINGLE_QUOTE         KC_QUOTE                    // '
-#define US_OSX_SEMICOLON            KC_SCOLON                   // ;
+#define US_OSX_SEMICOLON            KC_SCLN                     // ;
 
 // NEO_4 special characters
 #define US_OSX_FEMININE_ORDINAL     LALT(KC_9)                  // ª
@@ -125,26 +128,26 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [NEO_1] = LAYOUT_ergodox(
     // left hand side - main
     KC_NO /* NOOP */, NEO2_1,                   NEO2_2,                   NEO2_3,                   NEO2_4,           NEO2_5,           KC_ESCAPE,
-    KC_TAB,           KC_X,                     KC_V,                     KC_L,                     KC_C,             KC_W,             KC_LCTRL,
+    KC_TAB,           KC_X,                     KC_V,                     KC_L,                     KC_C,             KC_W,             KC_LCTL,
     NEO2_LMOD3,       KC_U,                     KC_I,                     KC_A,                     KC_E,             KC_O,             /* --- */
-    KC_LSHIFT,        NEO2_UE,                  NEO2_OE,                  NEO2_AE,                  KC_P,             KC_Z,             KC_LALT,
-    KC_NO /* NOOP */, KC_NO /* NOOP */,         KC_LCTRL,                 KC_LALT,                  KC_LGUI,          /* --- */         /* --- */
+    KC_LSFT,          NEO2_UE,                  NEO2_OE,                  NEO2_AE,                  KC_P,             KC_Z,             KC_LALT,
+    KC_NO /* NOOP */, KC_NO /* NOOP */,         KC_LCTL,                  KC_LALT,                  KC_LGUI,          /* --- */         /* --- */
 
     // left hand side - thumb cluster
     /* --- */         MO(FKEYS),        KC_HOME,
-    /* KC_BSPACE */   /* KC_DELETE */   KC_END,
-    KC_BSPACE,        KC_DELETE,        NEO2_LMOD4,
+    /* KC_BSPC */     /* KC_DELETE */   KC_END,
+    KC_BSPC,          KC_DELETE,        NEO2_LMOD4,
 
     // right hand side - main
     TO(US_1),         NEO2_6,           NEO2_7,           NEO2_8,           NEO2_9,           NEO2_0,           NEO2_MINUS,
-    KC_RCTRL,         KC_K,             KC_H,             KC_G,             KC_F,             KC_Q,             NEO2_SHARP_S,
+    KC_RCTL,          KC_K,             KC_H,             KC_G,             KC_F,             KC_Q,             NEO2_SHARP_S,
     /* --- */         KC_S,             KC_N,             KC_R,             KC_T,             KC_D,             NEO2_RMOD3,
-    KC_RALT,          KC_B,             KC_M,             NEO2_COMMA,       NEO2_DOT,         KC_J,             KC_RSHIFT,
+    KC_RALT,          KC_B,             KC_M,             NEO2_COMMA,       NEO2_DOT,         KC_J,             KC_RSFT,
     /* --- */         /* --- */         KC_RGUI,          KC_LEFT,          KC_DOWN,          KC_UP,            KC_RIGHT,
 
     // right hand side - thumb cluster
     KC_PGUP,          MO(FKEYS),        /* --- */
-    KC_PGDOWN,        /* --- */         /* --- */
+    KC_PGDN,          /* --- */         /* --- */
     NEO2_RMOD4,       KC_ENTER,         KC_SPACE
   ),
 
@@ -219,7 +222,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [NEO_4] = LAYOUT_ergodox(
     // left hand side - main
     KC_NO /* NOOP */,   US_OSX_FEMININE_ORDINAL,  US_OSX_MASCULINE_ORDINAL, KC_NO /* NOOP */,     US_OSX_MIDDLE_DOT,  US_OSX_BRITISH_POUND, _______,
-    _______,            KC_PGUP,                  KC_BSPACE,                KC_UP,                KC_DELETE,          KC_PGDOWN,            _______,
+    _______,            KC_PGUP,                  KC_BSPC,                  KC_UP,                KC_DELETE,          KC_PGDN,              _______,
     _______,            KC_HOME,                  KC_LEFT,                  KC_DOWN,              KC_RIGHT,           KC_END,               /* --- */
     _______,            KC_ESCAPE,                KC_TAB,                   KC_INSERT,            KC_ENTER,           KC_NO /* NOOP */,     _______,
     _______,            _______,                  _______,                  _______,              _______,            /* --- */             /* --- */
@@ -360,27 +363,27 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [US_1] = LAYOUT_ergodox(
     // left hand side - main
     KC_EQUAL,         KC_1,         KC_2,       KC_3,       KC_4,       KC_5,       KC_ESCAPE,
-    KC_BSLASH,        KC_Q,         KC_W,       KC_E,       KC_R,       KC_T,       KC_NO /* NOOP */,
+    KC_BSLS,          KC_Q,         KC_W,       KC_E,       KC_R,       KC_T,       KC_NO /* NOOP */,
     KC_TAB,           KC_A,         KC_S,       KC_D,       KC_F,       KC_G,       /* --- */
-    KC_LSHIFT,        KC_Z,         KC_X,       KC_C,       KC_V,       KC_B,       KC_NO /* NOOP */,
+    KC_LSFT,          KC_Z,         KC_X,       KC_C,       KC_V,       KC_B,       KC_NO /* NOOP */,
     KC_LGUI,          KC_GRAVE,     KC_NO,      KC_NO,      MO(FKEYS),  /* --- */   /* --- */
 
     // left hand side - thumb cluster
-    /* --- */         KC_LCTRL,     KC_LALT,
+    /* --- */         KC_LCTL,      KC_LALT,
     /* --- */         /* --- */     KC_HOME,
-    KC_BSPACE,        KC_DELETE,    KC_END,
+    KC_BSPC,          KC_DELETE,    KC_END,
 
     // right hand side - main
     TO(NEO_1),        KC_6,         KC_7,       KC_8,       KC_9,       KC_0,       KC_MINUS,
-    KC_LBRACKET,      KC_Y,         KC_U,       KC_I,       KC_O,       KC_P,       KC_RBRACKET,
-    /* --- */         KC_H,         KC_J,       KC_K,       KC_L,       KC_SCOLON,  KC_QUOTE,
-    KC_NO /* NOOP */, KC_N,         KC_M,       KC_COMMA,   KC_DOT,     KC_SLASH,   KC_RSHIFT,
+    KC_LBRC,          KC_Y,         KC_U,       KC_I,       KC_O,       KC_P,       KC_RBRC,
+    /* --- */         KC_H,         KC_J,       KC_K,       KC_L,       KC_SCLN,    KC_QUOTE,
+    KC_NO /* NOOP */, KC_N,         KC_M,       KC_COMMA,   KC_DOT,     KC_SLASH,   KC_RSFT,
     /* --- */         /* --- */     KC_LEFT,    KC_DOWN,    KC_UP,      KC_RIGHT,   KC_RGUI,
 
     // right hand side - thumb cluster
-    KC_RALT,          KC_RCTRL,     /* --- */
+    KC_RALT,          KC_RCTL,      /* --- */
     KC_PGUP,          /* --- */     /* --- */
-    KC_PGDOWN,        KC_ENTER,     KC_SPACE
+    KC_PGDN,          KC_ENTER,     KC_SPACE
   ),
 
   /* FKEYS: Function keys
@@ -436,7 +439,7 @@ void tap_with_modifiers(uint16_t keycode, uint8_t force_modifiers) {
   uint8_t active_modifiers = get_mods();
 
   if ((force_modifiers & MOD_MASK_SHIFT) && !(active_modifiers & MOD_MASK_SHIFT)) register_code(KC_LSFT);
-  if ((force_modifiers & MOD_MASK_CTRL) && !(active_modifiers & MOD_MASK_CTRL)) register_code(KC_LCTRL);
+  if ((force_modifiers & MOD_MASK_CTRL) && !(active_modifiers & MOD_MASK_CTRL)) register_code(KC_LCTL);
   if ((force_modifiers & MOD_MASK_ALT) && !(active_modifiers & MOD_MASK_ALT)) register_code(KC_LALT);
   if ((force_modifiers & MOD_MASK_GUI) && !(active_modifiers & MOD_MASK_GUI)) register_code(KC_LGUI);
 
@@ -444,7 +447,7 @@ void tap_with_modifiers(uint16_t keycode, uint8_t force_modifiers) {
   unregister_code(keycode);
 
   if ((force_modifiers & MOD_MASK_SHIFT) && !(active_modifiers & MOD_MASK_SHIFT)) unregister_code(KC_LSFT);
-  if ((force_modifiers & MOD_MASK_CTRL) && !(active_modifiers & MOD_MASK_CTRL)) unregister_code(KC_LCTRL);
+  if ((force_modifiers & MOD_MASK_CTRL) && !(active_modifiers & MOD_MASK_CTRL)) unregister_code(KC_LCTL);
   if ((force_modifiers & MOD_MASK_ALT) && !(active_modifiers & MOD_MASK_ALT)) unregister_code(KC_LALT);
   if ((force_modifiers & MOD_MASK_GUI) && !(active_modifiers & MOD_MASK_GUI)) unregister_code(KC_LGUI);
 }
@@ -453,6 +456,7 @@ void tap_with_modifiers(uint16_t keycode, uint8_t force_modifiers) {
 bool process_record_user_shifted(uint16_t keycode, keyrecord_t *record) {
   uint8_t active_modifiers = get_mods();
   uint8_t shifted          = active_modifiers & MOD_MASK_SHIFT;
+  uint8_t command          = active_modifiers & MOD_MASK_GUI;
 
   // Early return on key release
   if (!record->event.pressed) {
@@ -465,67 +469,81 @@ bool process_record_user_shifted(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
       case NEO2_1:
         // degree symbol
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_LSHIFT) SS_TAP(X_8) SS_UP(X_LSHIFT) SS_UP(X_LALT));
+        tap_code16(S(A(KC_8)));
         break;
       case NEO2_2:
         // section symbol
-        SEND_STRING(SS_DOWN(X_LALT) SS_TAP(X_6) SS_UP(X_LALT));
+          tap_code16(A(KC_6));
         break;
       case NEO2_3:
-        // There is no OSX key combination for the script small l character
+        if (command) {
+          tap_code16(S(G(KC_3)));
+        } else {
+          // There is no OSX key combination for the script small l character
+        }
         break;
       case NEO2_4:
-        // right angled quote
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_LSHIFT) SS_TAP(X_BSLASH) SS_UP(X_LSHIFT) SS_UP(X_LALT));
+        if (command) {
+          tap_code16(S(G(KC_4)));
+        } else {
+          tap_code16(S(A(KC_BACKSLASH)));
+        }
         break;
       case NEO2_5:
-        // left angled quote
-        SEND_STRING(SS_DOWN(X_LALT) SS_TAP(X_BSLASH) SS_UP(X_LALT));
+        if (command) {
+          tap_code16(S(G(KC_5)));
+        } else {
+          // left angled quote
+          tap_code16(A(KC_BACKSLASH));
+        }
         break;
       case NEO2_6:
         // dollar sign
-        SEND_STRING(SS_DOWN(X_LSHIFT) SS_TAP(X_4) SS_UP(X_LSHIFT));
+        tap_code16(S(KC_4));
         break;
       case NEO2_7:
         // euro sign
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_LSHIFT) SS_TAP(X_2) SS_UP(X_LSHIFT) SS_UP(X_LALT));
+        tap_code16(S(A(KC_2)));
         break;
       case NEO2_8:
         // low9 double quote
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_LSHIFT) SS_TAP(X_W) SS_UP(X_LSHIFT) SS_UP(X_LALT));
+        tap_code16(S(A(KC_W)));
         break;
       case NEO2_9:
         // left double quote
-        SEND_STRING(SS_DOWN(X_LALT) SS_TAP(X_LBRACKET) SS_UP(X_LALT));
+        tap_code16(A(KC_LEFT_BRACKET));
         break;
       case NEO2_0:
         // right double quote
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_LSHIFT) SS_TAP(X_LBRACKET) SS_UP(X_LSHIFT) SS_UP(X_LALT));
+        tap_code16(S(A(KC_LEFT_BRACKET)));
         break;
       case NEO2_MINUS:
         // em dash
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_LSHIFT) SS_TAP(X_MINUS) SS_UP(X_LSHIFT) SS_UP(X_LALT));
+        tap_code16(S(A(KC_MINUS)));
         break;
       case NEO2_COMMA:
         // en dash
-        SEND_STRING(SS_DOWN(X_LALT) SS_TAP(X_MINUS) SS_UP(X_LALT));
+        tap_code16(A(KC_MINUS));
         break;
       case NEO2_DOT:
         // bullet
-        SEND_STRING(SS_DOWN(X_LALT) SS_TAP(X_8) SS_UP(X_LALT));
+        tap_code16(A(KC_8));
         break;
       case NEO2_SHARP_S:
         // german sharp s
-        SEND_STRING(SS_DOWN(X_LALT) SS_TAP(X_S) SS_UP(X_LALT));
+        tap_code16(S(KC_S));
         break;
       case NEO2_UE:
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_U) SS_UP(X_U) SS_UP(X_LALT) SS_DOWN(X_LSHIFT) SS_TAP(X_U) SS_UP(X_LSHIFT));
+        tap_code16(A(KC_U));
+        tap_code16(S(KC_U));
         break;
       case NEO2_OE:
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_U) SS_UP(X_U) SS_UP(X_LALT) SS_DOWN(X_LSHIFT) SS_TAP(X_O) SS_UP(X_LSHIFT));
+        tap_code16(A(KC_U));
+        tap_code16(S(KC_O));
         break;
       case NEO2_AE:
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_U) SS_UP(X_U) SS_UP(X_LALT) SS_DOWN(X_LSHIFT) SS_TAP(X_A) SS_UP(X_LSHIFT));
+        tap_code16(A(KC_U));
+        tap_code16(S(KC_A));
         break;
       default:
         set_mods(active_modifiers);
@@ -537,56 +555,59 @@ bool process_record_user_shifted(uint16_t keycode, keyrecord_t *record) {
   } else {
     switch (keycode) {
       case NEO2_1:
-        SEND_STRING(SS_TAP(X_1));
+        tap_code(KC_1);
         break;
       case NEO2_2:
-        SEND_STRING(SS_TAP(X_2));
+        tap_code(KC_2);
         break;
       case NEO2_3:
-        SEND_STRING(SS_TAP(X_3));
+        tap_code(KC_3);
         break;
       case NEO2_4:
-        SEND_STRING(SS_TAP(X_4));
+        tap_code(KC_4);
         break;
       case NEO2_5:
-        SEND_STRING(SS_TAP(X_5));
+        tap_code(KC_5);
         break;
       case NEO2_6:
-        SEND_STRING(SS_TAP(X_6));
+        tap_code(KC_6);
         break;
       case NEO2_7:
-        SEND_STRING(SS_TAP(X_7));
+        tap_code(KC_7);
         break;
       case NEO2_8:
-        SEND_STRING(SS_TAP(X_8));
+        tap_code(KC_8);
         break;
       case NEO2_9:
-        SEND_STRING(SS_TAP(X_9));
+        tap_code(KC_9);
         break;
       case NEO2_0:
-        SEND_STRING(SS_TAP(X_0));
+        tap_code(KC_0);
         break;
       case NEO2_MINUS:
-        SEND_STRING(SS_TAP(X_MINUS));
+        tap_code(KC_MINUS);
         break;
       case NEO2_COMMA:
-        SEND_STRING(SS_TAP(X_COMMA));
+        tap_code(KC_COMMA);
         break;
       case NEO2_DOT:
-        SEND_STRING(SS_TAP(X_DOT));
+        tap_code(KC_DOT);
         break;
       case NEO2_SHARP_S:
         // german sharp s
-        SEND_STRING(SS_DOWN(X_LALT) SS_TAP(X_S) SS_UP(X_LALT));
+        tap_code16(A(KC_S));
         break;
       case NEO2_UE:
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_U) SS_UP(X_U) SS_UP(X_LALT) SS_TAP(X_U));
+        tap_code16(A(KC_U));
+        tap_code(KC_U);
         break;
       case NEO2_OE:
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_U) SS_UP(X_U) SS_UP(X_LALT) SS_TAP(X_O));
+        tap_code16(A(KC_U));
+        tap_code(KC_O);
         break;
       case NEO2_AE:
-        SEND_STRING(SS_DOWN(X_LALT) SS_DOWN(X_U) SS_UP(X_U) SS_UP(X_LALT) SS_TAP(X_A));
+        tap_code16(A(KC_U));
+        tap_code(KC_A);
         break;
       default:
         return true;
@@ -599,18 +620,18 @@ bool process_record_user_shifted(uint16_t keycode, keyrecord_t *record) {
 // Runs for each key down or up event.
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
-    case KC_LSHIFT:
+    case KC_LSFT:
       if (record->event.pressed) {
-        capslock_state |= (MOD_BIT(KC_LSHIFT));
+        capslock_state |= (MOD_BIT(KC_LSFT));
       } else {
-        capslock_state &= ~(MOD_BIT(KC_LSHIFT));
+        capslock_state &= ~(MOD_BIT(KC_LSFT));
       }
       break;
-    case KC_RSHIFT:
+    case KC_RIGHT_SHIFT:
       if (record->event.pressed) {
-        capslock_state |= MOD_BIT(KC_RSHIFT);
+        capslock_state |= MOD_BIT(KC_RSFT);
       } else {
-        capslock_state &= ~(MOD_BIT(KC_RSHIFT));
+        capslock_state &= ~(MOD_BIT(KC_RSFT));
       }
       break;
     case NEO2_LMOD3:
@@ -619,7 +640,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         neo3_state |= (1 << 1);
       } else {
         // Turn off NEO_3 layer unless it's enabled through NEO2_RMOD3 as well.
-        if ((neo3_state & ~(1 << 1)) == 0) {
+        if ((neo3_state & (1 << 2)) == 0) {
           layer_off(NEO_3);
         }
         neo3_state &= ~(1 << 1);
@@ -629,26 +650,36 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       if (record->event.pressed) {
         neo3_timer = timer_read();
         neo3_state |= (1 << 2);
+        // Reset tap detection state
+        neo3_state &= ~(1 << 3);
         layer_on(NEO_3);
       } else {
         // Turn off NEO_3 layer unless it's enabled through NEO2_LMOD3 as well.
-        if ((neo3_state & ~(1 << 2)) == 0) {
+        if ((neo3_state & (1 << 1)) == 0) {
           layer_off(NEO_3);
         }
         neo3_state &= ~(1 << 2);
 
         // Was the NEO2_RMOD3 key TAPPED?
-        if (timer_elapsed(neo3_timer) <= 150) {
-          if (neo3_state > 0) {
+        if (timer_elapsed(neo3_timer) <= TAPPING_TERM) {
+          if ((neo3_state & ~(1 << 3)) > 0) {
             // We are still in NEO_3 layer, send keycode and modifiers for @
             tap_with_modifiers(KC_2, MOD_MASK_SHIFT);
             return false;
           } else {
             // Do the normal key processing, send y
-            tap_with_modifiers(KC_Y, MOD_MASK_NONE);
+            if ((neo3_state & (1 << 3)) == 0) {
+              tap_with_modifiers(KC_Y, MOD_MASK_NONE);
+            }
             return false;
           }
         }
+      }
+      break;
+    default:
+      if (record->event.pressed && neo3_state > 0) {
+        // Track that we've seen a separate keypress event
+        neo3_state |= (1 << 3);
       }
       break;
   }
@@ -656,9 +687,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   if ((capslock_state & MOD_MASK_SHIFT) == MOD_MASK_SHIFT) {
     // CAPSLOCK is currently active, disable it
     if (host_keyboard_leds() & (1 << USB_LED_CAPS_LOCK)) {
-      unregister_code(KC_LOCKING_CAPS);
+      unregister_code(KC_LOCKING_CAPS_LOCK);
     } else {
-      register_code(KC_LOCKING_CAPS);
+      register_code(KC_LOCKING_CAPS_LOCK);
     }
     return false;
   }
@@ -673,7 +704,7 @@ void matrix_init_user(void){
 
 // Runs constantly in the background, in a loop.
 void matrix_scan_user(void) {
-  uint8_t layer = biton32(layer_state);
+  uint8_t layer = get_highest_layer(layer_state);
 
   ergodox_board_led_off();
   ergodox_right_led_1_off();

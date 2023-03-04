@@ -1,14 +1,6 @@
-MCU = atmega32u4
-F_CPU = 16000000
-ARCH = AVR8
-F_USB = $(F_CPU)
-
-OPT_DEFS += -DINTERRUPT_CONTROL_ENDPOINT
-
-BOOTLOADER = atmel-dfu
-
-NKRO_ENABLE = yes
-OLED_DRIVER_ENABLE = yes
+NKRO_ENABLE = yes           # Enable N-Key Rollover
+OLED_ENABLE = yes
+OLED_DRIVER = SSD1306
 RGBLIGHT_ENABLE = yes
 
 DEFAULT_FOLDER = mechllama/g35/v2

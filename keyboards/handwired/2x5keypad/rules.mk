@@ -1,13 +1,13 @@
-MCU = atmega32u4
-BOOTLOADER = caterina
-
-BOOTMAGIC_ENABLE = yes	# Virtual DIP switch configuration
-MOUSEKEY_ENABLE = yes	# Mouse keys
-EXTRAKEY_ENABLE = yes	# Audio control and System control
-CONSOLE_ENABLE= no	# Console for debug
-COMMAND_ENABLE = no     # Commands for debug and configuration
-SLEEP_LED_ENABLE = no   # Breathing sleep LED during USB suspend
-NKRO_ENABLE = yes	# USB Nkey Rollover -
-BACKLIGHT_ENABLE = no   # Enable keyboard backlight functionality
+# Build Options
+#   change yes to no to disable
+#
 AUDIO_ENABLE = no
+BACKLIGHT_ENABLE = no   # Enable keyboard backlight functionality
+BOOTMAGIC_ENABLE = yes      # Enable Bootmagic Lite
+COMMAND_ENABLE = no     # Commands for debug and configuration
+CONSOLE_ENABLE= no	# Console for debug
+EXTRAKEY_ENABLE = yes	# Audio control and System control
+MOUSEKEY_ENABLE = yes	# Mouse keys
+NKRO_ENABLE = yes           # Enable N-Key Rollover
+
 RGBLIGHT_ENABLE = no

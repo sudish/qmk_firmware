@@ -15,12 +15,24 @@
  * GPL v2 or later.
  */
 
-#include "ch.h"
-#include "hal.h"
+/*
+ * Implementation notes:
+ *
+ * USBEndpointConfig - Configured using explicit order instead of struct member name.
+ *   This is due to ChibiOS hal LLD differences, which is dependent on hardware,
+ *   "USBv1" devices have `ep_buffers` and "OTGv1" have `in_multiplier`.
+ *   Given `USBv1/hal_usb_lld.h` marks the field as "not currently used" this code file
+ *   makes the assumption this is safe to avoid littering with preprocessor directives.
+ */
+
+#include <ch.h>
+#include <hal.h>
+#include <string.h>
 
 #include "usb_main.h"
 
 #include "host.h"
+#include "chibios_config.h"
 #include "debug.h"
 #include "suspend.h"
 #ifdef SLEEP_LED_ENABLE
@@ -28,6 +40,7 @@
 #    include "led.h"
 #endif
 #include "wait.h"
+#include "usb_device_state.h"
 #include "usb_descriptor.h"
 #include "usb_driver.h"
 
@@ -50,25 +63,45 @@ extern keymap_config_t keymap_config;
 #    define usb_lld_disconnect_bus(usbp)
 #endif
 
-uint8_t                keyboard_idle __attribute__((aligned(2)))      = 0;
-uint8_t                keyboard_protocol __attribute__((aligned(2)))  = 1;
-uint16_t               keyboard_led_stats __attribute__((aligned(2))) = 0;
-volatile uint16_t      keyboard_idle_count                            = 0;
+uint8_t                keyboard_idle __attribute__((aligned(2)))     = 0;
+uint8_t                keyboard_protocol __attribute__((aligned(2))) = 1;
+uint8_t                keyboard_led_state                            = 0;
+volatile uint16_t      keyboard_idle_count                           = 0;
 static virtual_timer_t keyboard_idle_timer;
-static void            keyboard_idle_timer_cb(void *arg);
+
+static void keyboard_idle_timer_cb(struct ch_virtual_timer *, void *arg);
 
 report_keyboard_t keyboard_report_sent = {{0}};
-#ifdef MOUSE_ENABLE
-report_mouse_t mouse_report_blank = {0};
-#endif /* MOUSE_ENABLE */
+report_mouse_t    mouse_report_sent    = {0};
+
+union {
+    uint8_t           report_id;
+    report_keyboard_t keyboard;
 #ifdef EXTRAKEY_ENABLE
-uint8_t extra_report_blank[3] = {0};
-#endif /* EXTRAKEY_ENABLE */
+    report_extra_t extra;
+#endif
+#ifdef MOUSE_ENABLE
+    report_mouse_t mouse;
+#endif
+#ifdef DIGITIZER_ENABLE
+    report_digitizer_t digitizer;
+#endif
+#ifdef JOYSTICK_ENABLE
+    report_joystick_t joystick;
+#endif
+} universal_report_blank = {0};
 
 /* ---------------------------------------------------------
  *            Descriptors and USB driver objects
  * ---------------------------------------------------------
  */
+
+/* USB Low Level driver specific endpoint fields */
+#if !defined(usb_lld_endpoint_fields)
+#    define usb_lld_endpoint_fields   \
+        2,        /* IN multiplier */ \
+            NULL, /* SETUP buffer (not a SETUP endpoint) */
+#endif
 
 /* HID specific constants */
 #define HID_GET_REPORT 0x01
@@ -86,30 +119,40 @@ uint8_t extra_report_blank[3] = {0};
 static const USBDescriptor *usb_get_descriptor_cb(USBDriver *usbp, uint8_t dtype, uint8_t dindex, uint16_t wIndex) {
     (void)usbp;
     static USBDescriptor desc;
-    uint16_t             wValue = ((uint16_t)dtype << 8) | dindex;
-    desc.ud_string              = NULL;
-    desc.ud_size                = get_usb_descriptor(wValue, wIndex, (const void **const) & desc.ud_string);
+    uint16_t             wValue  = ((uint16_t)dtype << 8) | dindex;
+    uint16_t             wLength = ((uint16_t)usbp->setup[7] << 8) | usbp->setup[6];
+    desc.ud_string               = NULL;
+    desc.ud_size                 = get_usb_descriptor(wValue, wIndex, wLength, (const void **const) & desc.ud_string);
     if (desc.ud_string == NULL)
         return NULL;
     else
         return &desc;
 }
 
+/*
+ * USB notification callback that does nothing.  Needed to work around bugs in
+ * some USB LLDs that fail to resume the waiting thread when the notification
+ * callback pointer is NULL.
+ */
+static void dummy_usb_cb(USBDriver *usbp, usbep_t ep) {
+    (void)usbp;
+    (void)ep;
+}
+
 #ifndef KEYBOARD_SHARED_EP
 /* keyboard endpoint state structure */
 static USBInEndpointState kbd_ep_state;
-/* keyboard endpoint initialization structure (IN) */
+/* keyboard endpoint initialization structure (IN) - see USBEndpointConfig comment at top of file */
 static const USBEndpointConfig kbd_ep_config = {
-    USB_EP_MODE_TYPE_INTR, /* Interrupt EP */
-    NULL,                  /* SETUP packet notification callback */
-    kbd_in_cb,             /* IN notification callback */
-    NULL,                  /* OUT notification callback */
-    KEYBOARD_EPSIZE,       /* IN maximum packet size */
-    0,                     /* OUT maximum packet size */
-    &kbd_ep_state,         /* IN Endpoint state */
-    NULL,                  /* OUT endpoint state */
-    2,                     /* IN multiplier */
-    NULL                   /* SETUP buffer (not a SETUP endpoint) */
+    USB_EP_MODE_TYPE_INTR,  /* Interrupt EP */
+    NULL,                   /* SETUP packet notification callback */
+    dummy_usb_cb,           /* IN notification callback */
+    NULL,                   /* OUT notification callback */
+    KEYBOARD_EPSIZE,        /* IN maximum packet size */
+    0,                      /* OUT maximum packet size */
+    &kbd_ep_state,          /* IN Endpoint state */
+    NULL,                   /* OUT endpoint state */
+    usb_lld_endpoint_fields /* USB driver specific endpoint fields */
 };
 #endif
 
@@ -117,18 +160,17 @@ static const USBEndpointConfig kbd_ep_config = {
 /* mouse endpoint state structure */
 static USBInEndpointState mouse_ep_state;
 
-/* mouse endpoint initialization structure (IN) */
+/* mouse endpoint initialization structure (IN) - see USBEndpointConfig comment at top of file */
 static const USBEndpointConfig mouse_ep_config = {
-    USB_EP_MODE_TYPE_INTR, /* Interrupt EP */
-    NULL,                  /* SETUP packet notification callback */
-    mouse_in_cb,           /* IN notification callback */
-    NULL,                  /* OUT notification callback */
-    MOUSE_EPSIZE,          /* IN maximum packet size */
-    0,                     /* OUT maximum packet size */
-    &mouse_ep_state,       /* IN Endpoint state */
-    NULL,                  /* OUT endpoint state */
-    2,                     /* IN multiplier */
-    NULL                   /* SETUP buffer (not a SETUP endpoint) */
+    USB_EP_MODE_TYPE_INTR,  /* Interrupt EP */
+    NULL,                   /* SETUP packet notification callback */
+    dummy_usb_cb,           /* IN notification callback */
+    NULL,                   /* OUT notification callback */
+    MOUSE_EPSIZE,           /* IN maximum packet size */
+    0,                      /* OUT maximum packet size */
+    &mouse_ep_state,        /* IN Endpoint state */
+    NULL,                   /* OUT endpoint state */
+    usb_lld_endpoint_fields /* USB driver specific endpoint fields */
 };
 #endif
 
@@ -136,21 +178,69 @@ static const USBEndpointConfig mouse_ep_config = {
 /* shared endpoint state structure */
 static USBInEndpointState shared_ep_state;
 
-/* shared endpoint initialization structure (IN) */
+/* shared endpoint initialization structure (IN) - see USBEndpointConfig comment at top of file */
 static const USBEndpointConfig shared_ep_config = {
-    USB_EP_MODE_TYPE_INTR, /* Interrupt EP */
-    NULL,                  /* SETUP packet notification callback */
-    shared_in_cb,          /* IN notification callback */
-    NULL,                  /* OUT notification callback */
-    SHARED_EPSIZE,         /* IN maximum packet size */
-    0,                     /* OUT maximum packet size */
-    &shared_ep_state,      /* IN Endpoint state */
-    NULL,                  /* OUT endpoint state */
-    2,                     /* IN multiplier */
-    NULL                   /* SETUP buffer (not a SETUP endpoint) */
+    USB_EP_MODE_TYPE_INTR,  /* Interrupt EP */
+    NULL,                   /* SETUP packet notification callback */
+    dummy_usb_cb,           /* IN notification callback */
+    NULL,                   /* OUT notification callback */
+    SHARED_EPSIZE,          /* IN maximum packet size */
+    0,                      /* OUT maximum packet size */
+    &shared_ep_state,       /* IN Endpoint state */
+    NULL,                   /* OUT endpoint state */
+    usb_lld_endpoint_fields /* USB driver specific endpoint fields */
 };
 #endif
 
+#if defined(JOYSTICK_ENABLE) && !defined(JOYSTICK_SHARED_EP)
+/* joystick endpoint state structure */
+static USBInEndpointState joystick_ep_state;
+
+/* joystick endpoint initialization structure (IN) - see USBEndpointConfig comment at top of file */
+static const USBEndpointConfig joystick_ep_config = {
+    USB_EP_MODE_TYPE_INTR,  /* Interrupt EP */
+    NULL,                   /* SETUP packet notification callback */
+    dummy_usb_cb,           /* IN notification callback */
+    NULL,                   /* OUT notification callback */
+    JOYSTICK_EPSIZE,        /* IN maximum packet size */
+    0,                      /* OUT maximum packet size */
+    &joystick_ep_state,     /* IN Endpoint state */
+    NULL,                   /* OUT endpoint state */
+    usb_lld_endpoint_fields /* USB driver specific endpoint fields */
+};
+#endif
+
+#if defined(DIGITIZER_ENABLE) && !defined(DIGITIZER_SHARED_EP)
+/* digitizer endpoint state structure */
+static USBInEndpointState digitizer_ep_state;
+
+/* digitizer endpoint initialization structure (IN) - see USBEndpointConfig comment at top of file */
+static const USBEndpointConfig digitizer_ep_config = {
+    USB_EP_MODE_TYPE_INTR,  /* Interrupt EP */
+    NULL,                   /* SETUP packet notification callback */
+    dummy_usb_cb,           /* IN notification callback */
+    NULL,                   /* OUT notification callback */
+    DIGITIZER_EPSIZE,       /* IN maximum packet size */
+    0,                      /* OUT maximum packet size */
+    &digitizer_ep_state,    /* IN Endpoint state */
+    NULL,                   /* OUT endpoint state */
+    usb_lld_endpoint_fields /* USB driver specific endpoint fields */
+};
+#endif
+
+#ifdef USB_ENDPOINTS_ARE_REORDERABLE
+typedef struct {
+    size_t              queue_capacity_in;
+    size_t              queue_capacity_out;
+    USBInEndpointState  in_ep_state;
+    USBOutEndpointState out_ep_state;
+    USBInEndpointState  int_ep_state;
+    USBEndpointConfig   inout_ep_config;
+    USBEndpointConfig   int_ep_config;
+    const QMKUSBConfig  config;
+    QMKUSBDriver        driver;
+} usb_driver_config_t;
+#else
 typedef struct {
     size_t              queue_capacity_in;
     size_t              queue_capacity_out;
@@ -163,60 +253,107 @@ typedef struct {
     const QMKUSBConfig  config;
     QMKUSBDriver        driver;
 } usb_driver_config_t;
+#endif
 
-#define QMK_USB_DRIVER_CONFIG(stream, notification, fixedsize)                                                       \
-    {                                                                                                                \
-        .queue_capacity_in = stream##_IN_CAPACITY, .queue_capacity_out = stream##_OUT_CAPACITY,                      \
-        .in_ep_config = {.ep_mode     = stream##_IN_MODE,                                                            \
-                         .setup_cb    = NULL,                                                                        \
-                         .in_cb       = qmkusbDataTransmitted,                                                       \
-                         .out_cb      = NULL,                                                                        \
-                         .in_maxsize  = stream##_EPSIZE,                                                             \
-                         .out_maxsize = 0, /* The pointer to the states will be filled during initialization */      \
-                         .in_state    = NULL,                                                                        \
-                         .out_state   = NULL,                                                                        \
-                         .ep_buffers  = 2,                                                                           \
-                         .setup_buf   = NULL},                                                                         \
-        .out_ep_config =                                                                                             \
-            {                                                                                                        \
-                .ep_mode     = stream##_OUT_MODE,                                                                    \
-                .setup_cb    = NULL,                                                                                 \
-                .in_cb       = NULL,                                                                                 \
-                .out_cb      = qmkusbDataReceived,                                                                   \
-                .in_maxsize  = 0,                                                                                    \
-                .out_maxsize = stream##_EPSIZE, /* The pointer to the states will be filled during initialization */ \
-                .in_state    = NULL,                                                                                 \
-                .out_state   = NULL,                                                                                 \
-                .ep_buffers  = 2,                                                                                    \
-                .setup_buf   = NULL,                                                                                 \
-            },                                                                                                       \
-        .int_ep_config =                                                                                             \
-            {                                                                                                        \
-                .ep_mode     = USB_EP_MODE_TYPE_INTR,                                                                \
-                .setup_cb    = NULL,                                                                                 \
-                .in_cb       = qmkusbInterruptTransmitted,                                                           \
-                .out_cb      = NULL,                                                                                 \
-                .in_maxsize  = CDC_NOTIFICATION_EPSIZE,                                                              \
-                .out_maxsize = 0, /* The pointer to the states will be filled during initialization */               \
-                .in_state    = NULL,                                                                                 \
-                .out_state   = NULL,                                                                                 \
-                .ep_buffers  = 2,                                                                                    \
-                .setup_buf   = NULL,                                                                                 \
-            },                                                                                                       \
-        .config = {                                                                                                  \
-            .usbp        = &USB_DRIVER,                                                                              \
-            .bulk_in     = stream##_IN_EPNUM,                                                                        \
-            .bulk_out    = stream##_OUT_EPNUM,                                                                       \
-            .int_in      = notification,                                                                             \
-            .in_buffers  = stream##_IN_CAPACITY,                                                                     \
-            .out_buffers = stream##_OUT_CAPACITY,                                                                    \
-            .in_size     = stream##_EPSIZE,                                                                          \
-            .out_size    = stream##_EPSIZE,                                                                          \
-            .fixed_size  = fixedsize,                                                                                \
-            .ib          = (uint8_t[BQ_BUFFER_SIZE(stream##_IN_CAPACITY, stream##_EPSIZE)]){},                       \
-            .ob          = (uint8_t[BQ_BUFFER_SIZE(stream##_OUT_CAPACITY, stream##_EPSIZE)]){},                      \
-        }                                                                                                            \
-    }
+#ifdef USB_ENDPOINTS_ARE_REORDERABLE
+/* Reusable initialization structure - see USBEndpointConfig comment at top of file */
+#    define QMK_USB_DRIVER_CONFIG(stream, notification, fixedsize)                                                              \
+        {                                                                                                                       \
+            .queue_capacity_in = stream##_IN_CAPACITY, .queue_capacity_out = stream##_OUT_CAPACITY,                             \
+            .inout_ep_config =                                                                                                  \
+                {                                                                                                               \
+                    stream##_IN_MODE,       /* Interrupt EP */                                                                  \
+                    NULL,                   /* SETUP packet notification callback */                                            \
+                    qmkusbDataTransmitted,  /* IN notification callback */                                                      \
+                    qmkusbDataReceived,     /* OUT notification callback */                                                     \
+                    stream##_EPSIZE,        /* IN maximum packet size */                                                        \
+                    stream##_EPSIZE,        /* OUT maximum packet size */                                                       \
+                    NULL,                   /* IN Endpoint state */                                                             \
+                    NULL,                   /* OUT endpoint state */                                                            \
+                    usb_lld_endpoint_fields /* USB driver specific endpoint fields */                                           \
+                },                                                                                                              \
+            .int_ep_config =                                                                                                    \
+                {                                                                                                               \
+                    USB_EP_MODE_TYPE_INTR,      /* Interrupt EP */                                                              \
+                    NULL,                       /* SETUP packet notification callback */                                        \
+                    qmkusbInterruptTransmitted, /* IN notification callback */                                                  \
+                    NULL,                       /* OUT notification callback */                                                 \
+                    CDC_NOTIFICATION_EPSIZE,    /* IN maximum packet size */                                                    \
+                    0,                          /* OUT maximum packet size */                                                   \
+                    NULL,                       /* IN Endpoint state */                                                         \
+                    NULL,                       /* OUT endpoint state */                                                        \
+                    usb_lld_endpoint_fields     /* USB driver specific endpoint fields */                                       \
+                },                                                                                                              \
+            .config = {                                                                                                         \
+                .usbp        = &USB_DRIVER,                                                                                     \
+                .bulk_in     = stream##_IN_EPNUM,                                                                               \
+                .bulk_out    = stream##_OUT_EPNUM,                                                                              \
+                .int_in      = notification,                                                                                    \
+                .in_buffers  = stream##_IN_CAPACITY,                                                                            \
+                .out_buffers = stream##_OUT_CAPACITY,                                                                           \
+                .in_size     = stream##_EPSIZE,                                                                                 \
+                .out_size    = stream##_EPSIZE,                                                                                 \
+                .fixed_size  = fixedsize,                                                                                       \
+                .ib          = (__attribute__((aligned(4))) uint8_t[BQ_BUFFER_SIZE(stream##_IN_CAPACITY, stream##_EPSIZE)]){},  \
+                .ob          = (__attribute__((aligned(4))) uint8_t[BQ_BUFFER_SIZE(stream##_OUT_CAPACITY, stream##_EPSIZE)]){}, \
+            }                                                                                                                   \
+        }
+#else
+/* Reusable initialization structure - see USBEndpointConfig comment at top of file */
+#    define QMK_USB_DRIVER_CONFIG(stream, notification, fixedsize)                                                              \
+        {                                                                                                                       \
+            .queue_capacity_in = stream##_IN_CAPACITY, .queue_capacity_out = stream##_OUT_CAPACITY,                             \
+            .in_ep_config =                                                                                                     \
+                {                                                                                                               \
+                    stream##_IN_MODE,       /* Interrupt EP */                                                                  \
+                    NULL,                   /* SETUP packet notification callback */                                            \
+                    qmkusbDataTransmitted,  /* IN notification callback */                                                      \
+                    NULL,                   /* OUT notification callback */                                                     \
+                    stream##_EPSIZE,        /* IN maximum packet size */                                                        \
+                    0,                      /* OUT maximum packet size */                                                       \
+                    NULL,                   /* IN Endpoint state */                                                             \
+                    NULL,                   /* OUT endpoint state */                                                            \
+                    usb_lld_endpoint_fields /* USB driver specific endpoint fields */                                           \
+                },                                                                                                              \
+            .out_ep_config =                                                                                                    \
+                {                                                                                                               \
+                    stream##_OUT_MODE,      /* Interrupt EP */                                                                  \
+                    NULL,                   /* SETUP packet notification callback */                                            \
+                    NULL,                   /* IN notification callback */                                                      \
+                    qmkusbDataReceived,     /* OUT notification callback */                                                     \
+                    0,                      /* IN maximum packet size */                                                        \
+                    stream##_EPSIZE,        /* OUT maximum packet size */                                                       \
+                    NULL,                   /* IN Endpoint state */                                                             \
+                    NULL,                   /* OUT endpoint state */                                                            \
+                    usb_lld_endpoint_fields /* USB driver specific endpoint fields */                                           \
+                },                                                                                                              \
+            .int_ep_config =                                                                                                    \
+                {                                                                                                               \
+                    USB_EP_MODE_TYPE_INTR,      /* Interrupt EP */                                                              \
+                    NULL,                       /* SETUP packet notification callback */                                        \
+                    qmkusbInterruptTransmitted, /* IN notification callback */                                                  \
+                    NULL,                       /* OUT notification callback */                                                 \
+                    CDC_NOTIFICATION_EPSIZE,    /* IN maximum packet size */                                                    \
+                    0,                          /* OUT maximum packet size */                                                   \
+                    NULL,                       /* IN Endpoint state */                                                         \
+                    NULL,                       /* OUT endpoint state */                                                        \
+                    usb_lld_endpoint_fields     /* USB driver specific endpoint fields */                                       \
+                },                                                                                                              \
+            .config = {                                                                                                         \
+                .usbp        = &USB_DRIVER,                                                                                     \
+                .bulk_in     = stream##_IN_EPNUM,                                                                               \
+                .bulk_out    = stream##_OUT_EPNUM,                                                                              \
+                .int_in      = notification,                                                                                    \
+                .in_buffers  = stream##_IN_CAPACITY,                                                                            \
+                .out_buffers = stream##_OUT_CAPACITY,                                                                           \
+                .in_size     = stream##_EPSIZE,                                                                                 \
+                .out_size    = stream##_EPSIZE,                                                                                 \
+                .fixed_size  = fixedsize,                                                                                       \
+                .ib          = (__attribute__((aligned(4))) uint8_t[BQ_BUFFER_SIZE(stream##_IN_CAPACITY, stream##_EPSIZE)]){},  \
+                .ob          = (__attribute__((aligned(4))) uint8_t[BQ_BUFFER_SIZE(stream##_OUT_CAPACITY, stream##_EPSIZE)]){}, \
+            }                                                                                                                   \
+        }
+#endif
 
 typedef struct {
     union {
@@ -247,8 +384,12 @@ static usb_driver_configs_t drivers = {
     .console_driver = QMK_USB_DRIVER_CONFIG(CONSOLE, 0, true),
 #endif
 #ifdef RAW_ENABLE
-#    define RAW_IN_CAPACITY 4
-#    define RAW_OUT_CAPACITY 4
+#    ifndef RAW_IN_CAPACITY
+#        define RAW_IN_CAPACITY 4
+#    endif
+#    ifndef RAW_OUT_CAPACITY
+#        define RAW_OUT_CAPACITY 4
+#    endif
 #    define RAW_IN_MODE USB_EP_MODE_TYPE_INTR
 #    define RAW_OUT_MODE USB_EP_MODE_TYPE_INTR
     .raw_driver = QMK_USB_DRIVER_CONFIG(RAW, 0, false),
@@ -278,6 +419,84 @@ static usb_driver_configs_t drivers = {
  * ---------------------------------------------------------
  */
 
+#define USB_EVENT_QUEUE_SIZE 16
+usbevent_t event_queue[USB_EVENT_QUEUE_SIZE];
+uint8_t    event_queue_head;
+uint8_t    event_queue_tail;
+
+void usb_event_queue_init(void) {
+    // Initialise the event queue
+    memset(&event_queue, 0, sizeof(event_queue));
+    event_queue_head = 0;
+    event_queue_tail = 0;
+}
+
+static inline bool usb_event_queue_enqueue(usbevent_t event) {
+    uint8_t next = (event_queue_head + 1) % USB_EVENT_QUEUE_SIZE;
+    if (next == event_queue_tail) {
+        return false;
+    }
+    event_queue[event_queue_head] = event;
+    event_queue_head              = next;
+    return true;
+}
+
+static inline bool usb_event_queue_dequeue(usbevent_t *event) {
+    if (event_queue_head == event_queue_tail) {
+        return false;
+    }
+    *event           = event_queue[event_queue_tail];
+    event_queue_tail = (event_queue_tail + 1) % USB_EVENT_QUEUE_SIZE;
+    return true;
+}
+
+static inline void usb_event_suspend_handler(void) {
+    usb_device_state_set_suspend(USB_DRIVER.configuration != 0, USB_DRIVER.configuration);
+#ifdef SLEEP_LED_ENABLE
+    sleep_led_enable();
+#endif /* SLEEP_LED_ENABLE */
+}
+
+static inline void usb_event_wakeup_handler(void) {
+    suspend_wakeup_init();
+    usb_device_state_set_resume(USB_DRIVER.configuration != 0, USB_DRIVER.configuration);
+#ifdef SLEEP_LED_ENABLE
+    sleep_led_disable();
+    // NOTE: converters may not accept this
+    led_set(host_keyboard_leds());
+#endif /* SLEEP_LED_ENABLE */
+}
+
+bool last_suspend_state = false;
+
+void usb_event_queue_task(void) {
+    usbevent_t event;
+    while (usb_event_queue_dequeue(&event)) {
+        switch (event) {
+            case USB_EVENT_SUSPEND:
+                last_suspend_state = true;
+                usb_event_suspend_handler();
+                break;
+            case USB_EVENT_WAKEUP:
+                last_suspend_state = false;
+                usb_event_wakeup_handler();
+                break;
+            case USB_EVENT_CONFIGURED:
+                usb_device_state_set_configuration(USB_DRIVER.configuration != 0, USB_DRIVER.configuration);
+                break;
+            case USB_EVENT_UNCONFIGURED:
+                usb_device_state_set_configuration(false, 0);
+                break;
+            case USB_EVENT_RESET:
+                usb_device_state_set_reset();
+                break;
+            default:
+                // Nothing to do, we don't handle it.
+                break;
+        }
+    }
+}
+
 /* Handles the USB driver global events
  * TODO: maybe disable some things when connection is lost? */
 static void usb_event_cb(USBDriver *usbp, usbevent_t event) {
@@ -297,24 +516,36 @@ static void usb_event_cb(USBDriver *usbp, usbevent_t event) {
 #ifdef SHARED_EP_ENABLE
             usbInitEndpointI(usbp, SHARED_IN_EPNUM, &shared_ep_config);
 #endif
+#if defined(JOYSTICK_ENABLE) && !defined(JOYSTICK_SHARED_EP)
+            usbInitEndpointI(usbp, JOYSTICK_IN_EPNUM, &joystick_ep_config);
+#endif
+#if defined(DIGITIZER_ENABLE) && !defined(DIGITIZER_SHARED_EP)
+            usbInitEndpointI(usbp, DIGITIZER_IN_EPNUM, &digitizer_ep_config);
+#endif
             for (int i = 0; i < NUM_USB_DRIVERS; i++) {
+#ifdef USB_ENDPOINTS_ARE_REORDERABLE
+                usbInitEndpointI(usbp, drivers.array[i].config.bulk_in, &drivers.array[i].inout_ep_config);
+#else
                 usbInitEndpointI(usbp, drivers.array[i].config.bulk_in, &drivers.array[i].in_ep_config);
                 usbInitEndpointI(usbp, drivers.array[i].config.bulk_out, &drivers.array[i].out_ep_config);
+#endif
                 if (drivers.array[i].config.int_in) {
                     usbInitEndpointI(usbp, drivers.array[i].config.int_in, &drivers.array[i].int_ep_config);
                 }
                 qmkusbConfigureHookI(&drivers.array[i].driver);
             }
             osalSysUnlockFromISR();
+            if (last_suspend_state) {
+                usb_event_queue_enqueue(USB_EVENT_WAKEUP);
+            }
+            usb_event_queue_enqueue(USB_EVENT_CONFIGURED);
             return;
         case USB_EVENT_SUSPEND:
-#ifdef SLEEP_LED_ENABLE
-            sleep_led_enable();
-#endif      /* SLEEP_LED_ENABLE */
             /* Falls into.*/
         case USB_EVENT_UNCONFIGURED:
             /* Falls into.*/
         case USB_EVENT_RESET:
+            usb_event_queue_enqueue(event);
             for (int i = 0; i < NUM_USB_DRIVERS; i++) {
                 chSysLockFromISR();
                 /* Disconnection event on suspend.*/
@@ -331,12 +562,7 @@ static void usb_event_cb(USBDriver *usbp, usbevent_t event) {
                 qmkusbWakeupHookI(&drivers.array[i].driver);
                 chSysUnlockFromISR();
             }
-            suspend_wakeup_init();
-#ifdef SLEEP_LED_ENABLE
-            sleep_led_disable();
-            // NOTE: converters may not accept this
-            led_set(host_keyboard_leds());
-#endif /* SLEEP_LED_ENABLE */
+            usb_event_queue_enqueue(USB_EVENT_WAKEUP);
             return;
 
         case USB_EVENT_STALLED:
@@ -367,19 +593,22 @@ static uint16_t get_hword(uint8_t *p) {
  * Other Device    Required    Optional    Optional    Optional    Optional    Optional
  */
 
-#ifdef SHARED_EP_ENABLE
-static uint8_t set_report_buf[2] __attribute__((aligned(2)));
-static void    set_led_transfer_cb(USBDriver *usbp) {
-    if ((set_report_buf[0] == REPORT_ID_KEYBOARD) || (set_report_buf[0] == REPORT_ID_NKRO)) {
-        keyboard_led_stats = set_report_buf[1];
+static uint8_t set_report_buf[2] __attribute__((aligned(4)));
+
+static void set_led_transfer_cb(USBDriver *usbp) {
+    if (usbp->setup[6] == 2) { /* LSB(wLength) */
+        uint8_t report_id = set_report_buf[0];
+        if ((report_id == REPORT_ID_KEYBOARD) || (report_id == REPORT_ID_NKRO)) {
+            keyboard_led_state = set_report_buf[1];
+        }
+    } else {
+        keyboard_led_state = set_report_buf[0];
     }
 }
-#endif
 
 /* Callback for SETUP request on the endpoint 0 (control) */
 static bool usb_request_hook_cb(USBDriver *usbp) {
     const USBDescriptor *dp;
-    int                  has_report_id;
 
     /* usbp->setup fields:
      *  0:   bmRequestType (bitmask)
@@ -395,20 +624,38 @@ static bool usb_request_hook_cb(USBDriver *usbp) {
                 switch (usbp->setup[1]) { /* bRequest */
                     case HID_GET_REPORT:
                         switch (usbp->setup[4]) { /* LSB(wIndex) (check MSB==0?) */
+#ifndef KEYBOARD_SHARED_EP
                             case KEYBOARD_INTERFACE:
-                                usbSetupTransfer(usbp, (uint8_t *)&keyboard_report_sent, sizeof(keyboard_report_sent), NULL);
-                                return TRUE;
-                                break;
-
-#if defined(MOUSE_ENABLE) && !defined(MOUSE_SHARED_EP)
-                            case MOUSE_INTERFACE:
-                                usbSetupTransfer(usbp, (uint8_t *)&mouse_report_blank, sizeof(mouse_report_blank), NULL);
+                                usbSetupTransfer(usbp, (uint8_t *)&keyboard_report_sent, KEYBOARD_REPORT_SIZE, NULL);
                                 return TRUE;
                                 break;
 #endif
-
+#if defined(MOUSE_ENABLE) && !defined(MOUSE_SHARED_EP)
+                            case MOUSE_INTERFACE:
+                                usbSetupTransfer(usbp, (uint8_t *)&mouse_report_sent, sizeof(mouse_report_sent), NULL);
+                                return TRUE;
+                                break;
+#endif
+#ifdef SHARED_EP_ENABLE
+                            case SHARED_INTERFACE:
+#    ifdef KEYBOARD_SHARED_EP
+                                if (usbp->setup[2] == REPORT_ID_KEYBOARD) {
+                                    usbSetupTransfer(usbp, (uint8_t *)&keyboard_report_sent, KEYBOARD_REPORT_SIZE, NULL);
+                                    return TRUE;
+                                    break;
+                                }
+#    endif
+#    ifdef MOUSE_SHARED_EP
+                                if (usbp->setup[2] == REPORT_ID_MOUSE) {
+                                    usbSetupTransfer(usbp, (uint8_t *)&mouse_report_sent, sizeof(mouse_report_sent), NULL);
+                                    return TRUE;
+                                    break;
+                                }
+#    endif
+#endif /* SHARED_EP_ENABLE */
                             default:
-                                usbSetupTransfer(usbp, NULL, 0, NULL);
+                                universal_report_blank.report_id = usbp->setup[2];
+                                usbSetupTransfer(usbp, (uint8_t *)&universal_report_blank, usbp->setup[6], NULL);
                                 return TRUE;
                                 break;
                         }
@@ -431,27 +678,12 @@ static bool usb_request_hook_cb(USBDriver *usbp) {
             case USB_RTYPE_DIR_HOST2DEV:
                 switch (usbp->setup[1]) { /* bRequest */
                     case HID_SET_REPORT:
-                        switch (usbp->setup[4]) { /* LSB(wIndex) (check MSB==0 and wLength==1?) */
+                        switch (usbp->setup[4]) { /* LSB(wIndex) (check MSB==0?) */
                             case KEYBOARD_INTERFACE:
 #if defined(SHARED_EP_ENABLE) && !defined(KEYBOARD_SHARED_EP)
                             case SHARED_INTERFACE:
 #endif
-                                /* keyboard_led_stats = <read byte from next OUT report>
-                                 * keyboard_led_stats needs be word (or dword), otherwise we get an exception on F0 */
-                                has_report_id = 0;
-#if defined(SHARED_EP_ENABLE)
-                                if (usbp->setup[4] == SHARED_INTERFACE) {
-                                    has_report_id = 1;
-                                }
-#endif
-                                if (usbp->setup[4] == KEYBOARD_INTERFACE && !keyboard_protocol) {
-                                    has_report_id = 0;
-                                }
-                                if (has_report_id) {
-                                    usbSetupTransfer(usbp, set_report_buf, sizeof(set_report_buf), set_led_transfer_cb);
-                                } else {
-                                    usbSetupTransfer(usbp, (uint8_t *)&keyboard_led_stats, 1, NULL);
-                                }
+                                usbSetupTransfer(usbp, set_report_buf, sizeof(set_report_buf), set_led_transfer_cb);
                                 return TRUE;
                                 break;
                         }
@@ -461,14 +693,13 @@ static bool usb_request_hook_cb(USBDriver *usbp) {
                         if ((usbp->setup[4] == KEYBOARD_INTERFACE) && (usbp->setup[5] == 0)) { /* wIndex */
                             keyboard_protocol = ((usbp->setup[2]) != 0x00);                    /* LSB(wValue) */
 #ifdef NKRO_ENABLE
-                            keymap_config.nkro = !!keyboard_protocol;
-                            if (!keymap_config.nkro && keyboard_idle) {
-#else                           /* NKRO_ENABLE */
+                            if (!keyboard_protocol && keyboard_idle) {
+#else  /* NKRO_ENABLE */
                             if (keyboard_idle) {
-#endif                          /* NKRO_ENABLE */
+#endif /* NKRO_ENABLE */
                                 /* arm the idle timer if boot protocol & idle */
                                 osalSysLockFromISR();
-                                chVTSetI(&keyboard_idle_timer, 4 * MS2ST(keyboard_idle), keyboard_idle_timer_cb, (void *)usbp);
+                                chVTSetI(&keyboard_idle_timer, 4 * TIME_MS2I(keyboard_idle), keyboard_idle_timer_cb, (void *)usbp);
                                 osalSysUnlockFromISR();
                             }
                         }
@@ -485,7 +716,7 @@ static bool usb_request_hook_cb(USBDriver *usbp) {
                         if (keyboard_idle) {
 #endif /* NKRO_ENABLE */
                             osalSysLockFromISR();
-                            chVTSetI(&keyboard_idle_timer, 4 * MS2ST(keyboard_idle), keyboard_idle_timer_cb, (void *)usbp);
+                            chVTSetI(&keyboard_idle_timer, 4 * TIME_MS2I(keyboard_idle), keyboard_idle_timer_cb, (void *)usbp);
                             osalSysUnlockFromISR();
                         }
                         usbSetupTransfer(usbp, NULL, 0, NULL);
@@ -516,7 +747,6 @@ static bool usb_request_hook_cb(USBDriver *usbp) {
 
 /* Start-of-frame callback */
 static void usb_sof_cb(USBDriver *usbp) {
-    kbd_sof_cb(usbp);
     osalSysLockFromISR();
     for (int i = 0; i < NUM_USB_DRIVERS; i++) {
         qmkusbSOFHookI(&drivers.array[i].driver);
@@ -537,12 +767,21 @@ static const USBConfig usbcfg = {
  */
 void init_usb_driver(USBDriver *usbp) {
     for (int i = 0; i < NUM_USB_DRIVERS; i++) {
+#ifdef USB_ENDPOINTS_ARE_REORDERABLE
+        QMKUSBDriver *driver                       = &drivers.array[i].driver;
+        drivers.array[i].inout_ep_config.in_state  = &drivers.array[i].in_ep_state;
+        drivers.array[i].inout_ep_config.out_state = &drivers.array[i].out_ep_state;
+        drivers.array[i].int_ep_config.in_state    = &drivers.array[i].int_ep_state;
+        qmkusbObjectInit(driver, &drivers.array[i].config);
+        qmkusbStart(driver, &drivers.array[i].config);
+#else
         QMKUSBDriver *driver                     = &drivers.array[i].driver;
         drivers.array[i].in_ep_config.in_state   = &drivers.array[i].in_ep_state;
         drivers.array[i].out_ep_config.out_state = &drivers.array[i].out_ep_state;
         drivers.array[i].int_ep_config.in_state  = &drivers.array[i].int_ep_state;
         qmkusbObjectInit(driver, &drivers.array[i].config);
         qmkusbStart(driver, &drivers.array[i].config);
+#endif
     }
 
     /*
@@ -551,34 +790,41 @@ void init_usb_driver(USBDriver *usbp) {
      * after a reset.
      */
     usbDisconnectBus(usbp);
-    wait_ms(1500);
+    usbStop(usbp);
+    wait_ms(50);
     usbStart(usbp, &usbcfg);
     usbConnectBus(usbp);
 
     chVTObjectInit(&keyboard_idle_timer);
 }
 
+__attribute__((weak)) void restart_usb_driver(USBDriver *usbp) {
+    usbDisconnectBus(usbp);
+    usbStop(usbp);
+
+#if USB_SUSPEND_WAKEUP_DELAY > 0
+    // Some hubs, kvm switches, and monitors do
+    // weird things, with USB device state bouncing
+    // around wildly on wakeup, yielding race
+    // conditions that can corrupt the keyboard state.
+    //
+    // Pause for a while to let things settle...
+    wait_ms(USB_SUSPEND_WAKEUP_DELAY);
+#endif
+
+    usbStart(usbp, &usbcfg);
+    usbConnectBus(usbp);
+}
+
 /* ---------------------------------------------------------
  *                  Keyboard functions
  * ---------------------------------------------------------
  */
-/* keyboard IN callback hander (a kbd report has made it IN) */
-#ifndef KEYBOARD_SHARED_EP
-void kbd_in_cb(USBDriver *usbp, usbep_t ep) {
-    /* STUB */
-    (void)usbp;
-    (void)ep;
-}
-#endif
-
-/* start-of-frame handler
- * TODO: i guess it would be better to re-implement using timers,
- *  so that this is not going to have to be checked every 1ms */
-void kbd_sof_cb(USBDriver *usbp) { (void)usbp; }
 
 /* Idle requests timer code
  * callback (called from ISR, unlocked state) */
-static void keyboard_idle_timer_cb(void *arg) {
+static void keyboard_idle_timer_cb(struct ch_virtual_timer *timer, void *arg) {
+    (void)timer;
     USBDriver *usbp = (USBDriver *)arg;
 
     osalSysLockFromISR();
@@ -600,7 +846,7 @@ static void keyboard_idle_timer_cb(void *arg) {
             usbStartTransmitI(usbp, KEYBOARD_IN_EPNUM, (uint8_t *)&keyboard_report_sent, KEYBOARD_EPSIZE);
         }
         /* rearm the timer */
-        chVTSetI(&keyboard_idle_timer, 4 * MS2ST(keyboard_idle), keyboard_idle_timer_cb, (void *)usbp);
+        chVTSetI(&keyboard_idle_timer, 4 * TIME_MS2I(keyboard_idle), keyboard_idle_timer_cb, (void *)usbp);
     }
 
     /* do not rearm the timer if the condition above fails
@@ -609,59 +855,51 @@ static void keyboard_idle_timer_cb(void *arg) {
 }
 
 /* LED status */
-uint8_t keyboard_leds(void) { return (uint8_t)(keyboard_led_stats & 0xFF); }
+uint8_t keyboard_leds(void) {
+    return keyboard_led_state;
+}
 
-/* prepare and start sending a report IN
- * not callable from ISR or locked state */
-void send_keyboard(report_keyboard_t *report) {
+void send_report(uint8_t endpoint, void *report, size_t size) {
     osalSysLock();
     if (usbGetDriverStateI(&USB_DRIVER) != USB_ACTIVE) {
         osalSysUnlock();
         return;
     }
-    osalSysUnlock();
 
-#ifdef NKRO_ENABLE
-    if (keymap_config.nkro && keyboard_protocol) { /* NKRO protocol */
-        /* need to wait until the previous packet has made it through */
-        /* can rewrite this using the synchronous API, then would wait
-         * until *after* the packet has been transmitted. I think
-         * this is more efficient */
-        /* busy wait, should be short and not very common */
-        osalSysLock();
-        if (usbGetTransmitStatusI(&USB_DRIVER, SHARED_IN_EPNUM)) {
-            /* Need to either suspend, or loop and call unlock/lock during
-             * every iteration - otherwise the system will remain locked,
-             * no interrupts served, so USB not going through as well.
-             * Note: for suspend, need USB_USE_WAIT == TRUE in halconf.h */
-            osalThreadSuspendS(&(&USB_DRIVER)->epc[SHARED_IN_EPNUM]->in_state->thread);
+    if (usbGetTransmitStatusI(&USB_DRIVER, endpoint)) {
+        /* Need to either suspend, or loop and call unlock/lock during
+         * every iteration - otherwise the system will remain locked,
+         * no interrupts served, so USB not going through as well.
+         * Note: for suspend, need USB_USE_WAIT == TRUE in halconf.h */
+        if (osalThreadSuspendTimeoutS(&(&USB_DRIVER)->epc[endpoint]->in_state->thread, TIME_MS2I(10)) == MSG_TIMEOUT) {
+            osalSysUnlock();
+            return;
         }
-        usbStartTransmitI(&USB_DRIVER, SHARED_IN_EPNUM, (uint8_t *)report, sizeof(struct nkro_report));
-        osalSysUnlock();
-    } else
-#endif /* NKRO_ENABLE */
-    {  /* regular protocol */
-        /* need to wait until the previous packet has made it through */
-        /* busy wait, should be short and not very common */
-        osalSysLock();
-        if (usbGetTransmitStatusI(&USB_DRIVER, KEYBOARD_IN_EPNUM)) {
-            /* Need to either suspend, or loop and call unlock/lock during
-             * every iteration - otherwise the system will remain locked,
-             * no interrupts served, so USB not going through as well.
-             * Note: for suspend, need USB_USE_WAIT == TRUE in halconf.h */
-            osalThreadSuspendS(&(&USB_DRIVER)->epc[KEYBOARD_IN_EPNUM]->in_state->thread);
-        }
-        uint8_t *data, size;
-        if (keyboard_protocol) {
-            data = (uint8_t *)report;
-            size = KEYBOARD_REPORT_SIZE;
-        } else { /* boot protocol */
-            data = &report->mods;
-            size = 8;
-        }
-        usbStartTransmitI(&USB_DRIVER, KEYBOARD_IN_EPNUM, data, size);
-        osalSysUnlock();
     }
+    usbStartTransmitI(&USB_DRIVER, endpoint, report, size);
+    osalSysUnlock();
+}
+
+/* prepare and start sending a report IN
+ * not callable from ISR or locked state */
+void send_keyboard(report_keyboard_t *report) {
+    uint8_t ep   = KEYBOARD_IN_EPNUM;
+    size_t  size = KEYBOARD_REPORT_SIZE;
+
+    /* If we're in Boot Protocol, don't send any report ID or other funky fields */
+    if (!keyboard_protocol) {
+        send_report(ep, &report->mods, 8);
+    } else {
+#ifdef NKRO_ENABLE
+        if (keymap_config.nkro) {
+            ep   = SHARED_IN_EPNUM;
+            size = sizeof(struct nkro_report);
+        }
+#endif
+
+        send_report(ep, report, size);
+    }
+
     keyboard_report_sent = *report;
 }
 
@@ -670,81 +908,41 @@ void send_keyboard(report_keyboard_t *report) {
  * ---------------------------------------------------------
  */
 
-#ifdef MOUSE_ENABLE
-
-#    ifndef MOUSE_SHARED_EP
-/* mouse IN callback hander (a mouse report has made it IN) */
-void mouse_in_cb(USBDriver *usbp, usbep_t ep) {
-    (void)usbp;
-    (void)ep;
-}
-#    endif
-
 void send_mouse(report_mouse_t *report) {
-    osalSysLock();
-    if (usbGetDriverStateI(&USB_DRIVER) != USB_ACTIVE) {
-        osalSysUnlock();
-        return;
-    }
-
-    if (usbGetTransmitStatusI(&USB_DRIVER, MOUSE_IN_EPNUM)) {
-        /* Need to either suspend, or loop and call unlock/lock during
-         * every iteration - otherwise the system will remain locked,
-         * no interrupts served, so USB not going through as well.
-         * Note: for suspend, need USB_USE_WAIT == TRUE in halconf.h */
-        if (osalThreadSuspendTimeoutS(&(&USB_DRIVER)->epc[MOUSE_IN_EPNUM]->in_state->thread, MS2ST(10)) == MSG_TIMEOUT) {
-            osalSysUnlock();
-            return;
-        }
-    }
-    usbStartTransmitI(&USB_DRIVER, MOUSE_IN_EPNUM, (uint8_t *)report, sizeof(report_mouse_t));
-    osalSysUnlock();
-}
-
-#else  /* MOUSE_ENABLE */
-void send_mouse(report_mouse_t *report) { (void)report; }
-#endif /* MOUSE_ENABLE */
-
-/* ---------------------------------------------------------
- *                   Shared EP functions
- * ---------------------------------------------------------
- */
-#ifdef SHARED_EP_ENABLE
-/* shared IN callback hander */
-void shared_in_cb(USBDriver *usbp, usbep_t ep) {
-    /* STUB */
-    (void)usbp;
-    (void)ep;
-}
+#ifdef MOUSE_ENABLE
+    send_report(MOUSE_IN_EPNUM, report, sizeof(report_mouse_t));
+    mouse_report_sent = *report;
 #endif
+}
 
 /* ---------------------------------------------------------
  *                   Extrakey functions
  * ---------------------------------------------------------
  */
 
+void send_extra(report_extra_t *report) {
 #ifdef EXTRAKEY_ENABLE
-static void send_extra_report(uint8_t report_id, uint16_t data) {
-    osalSysLock();
-    if (usbGetDriverStateI(&USB_DRIVER) != USB_ACTIVE) {
-        osalSysUnlock();
-        return;
-    }
-
-    report_extra_t report = {.report_id = report_id, .usage = data};
-
-    usbStartTransmitI(&USB_DRIVER, SHARED_IN_EPNUM, (uint8_t *)&report, sizeof(report_extra_t));
-    osalSysUnlock();
+    send_report(SHARED_IN_EPNUM, report, sizeof(report_extra_t));
+#endif
 }
 
-void send_system(uint16_t data) { send_extra_report(REPORT_ID_SYSTEM, data); }
+void send_programmable_button(report_programmable_button_t *report) {
+#ifdef PROGRAMMABLE_BUTTON_ENABLE
+    send_report(SHARED_IN_EPNUM, report, sizeof(report_programmable_button_t));
+#endif
+}
 
-void send_consumer(uint16_t data) { send_extra_report(REPORT_ID_CONSUMER, data); }
+void send_joystick(report_joystick_t *report) {
+#ifdef JOYSTICK_ENABLE
+    send_report(JOYSTICK_IN_EPNUM, report, sizeof(report_joystick_t));
+#endif
+}
 
-#else  /* EXTRAKEY_ENABLE */
-void send_system(uint16_t data) { (void)data; }
-void send_consumer(uint16_t data) { (void)data; }
-#endif /* EXTRAKEY_ENABLE */
+void send_digitizer(report_digitizer_t *report) {
+#ifdef DIGITIZER_ENABLE
+    send_report(DIGITIZER_IN_EPNUM, report, sizeof(report_digitizer_t));
+#endif
+}
 
 /* ---------------------------------------------------------
  *                   Console functions
@@ -754,9 +952,32 @@ void send_consumer(uint16_t data) { (void)data; }
 #ifdef CONSOLE_ENABLE
 
 int8_t sendchar(uint8_t c) {
-    // The previous implmentation had timeouts, but I think it's better to just slow down
-    // and make sure that everything is transferred, rather than dropping stuff
-    return chnWrite(&drivers.console_driver.driver, &c, 1);
+    static bool timed_out = false;
+    /* The `timed_out` state is an approximation of the ideal `is_listener_disconnected?` state.
+     *
+     * When a 5ms timeout write has timed out, hid_listen is most likely not running, or not
+     * listening to this keyboard, so we go into the timed_out state. In this state we assume
+     * that hid_listen is most likely not gonna be connected to us any time soon, so it would
+     * be wasteful to write follow-up characters with a 5ms timeout, it would all add up and
+     * unncecessarily slow down the firmware. However instead of just dropping the characters,
+     * we write them with a TIME_IMMEDIATE timeout, which is a zero timeout,
+     * and this will succeed only if hid_listen gets connected again. When a write with
+     * TIME_IMMEDIATE timeout succeeds, we know that hid_listen is listening to us again, and
+     * we can go back to the timed_out = false state, and following writes will be executed
+     * with a 5ms timeout. The reason we don't just send all characters with the TIME_IMMEDIATE
+     * timeout is that this could cause bytes to be lost even if hid_listen is running, if there
+     * is a lot of data being sent over the console.
+     *
+     * This logic will work correctly as long as hid_listen is able to receive at least 200
+     * bytes per second. On a heavily overloaded machine that's so overloaded that it's
+     * unusable, and constantly swapping, hid_listen might have trouble receiving 200 bytes per
+     * second, so some bytes might be lost on the console.
+     */
+
+    const sysinterval_t timeout = timed_out ? TIME_IMMEDIATE : TIME_MS2I(5);
+    const size_t        result  = chnWriteTimeout(&drivers.console_driver.driver, &c, 1, timeout);
+    timed_out                   = (result == 0);
+    return result;
 }
 
 // Just a dummy function for now, this could be exposed as a weak function
@@ -770,24 +991,14 @@ void console_task(void) {
     uint8_t buffer[CONSOLE_EPSIZE];
     size_t  size = 0;
     do {
-        size_t size = chnReadTimeout(&drivers.console_driver.driver, buffer, sizeof(buffer), TIME_IMMEDIATE);
+        size = chnReadTimeout(&drivers.console_driver.driver, buffer, sizeof(buffer), TIME_IMMEDIATE);
         if (size > 0) {
             console_receive(buffer, size);
         }
     } while (size > 0);
 }
 
-#else  /* CONSOLE_ENABLE */
-int8_t sendchar(uint8_t c) {
-    (void)c;
-    return 0;
-}
 #endif /* CONSOLE_ENABLE */
-
-void sendchar_pf(void *p, char c) {
-    (void)p;
-    sendchar((uint8_t)c);
-}
 
 #ifdef RAW_ENABLE
 void raw_hid_send(uint8_t *data, uint8_t length) {
@@ -808,7 +1019,7 @@ void raw_hid_task(void) {
     uint8_t buffer[RAW_EPSIZE];
     size_t  size = 0;
     do {
-        size_t size = chnReadTimeout(&drivers.raw_driver.driver, buffer, sizeof(buffer), TIME_IMMEDIATE);
+        size = chnReadTimeout(&drivers.raw_driver.driver, buffer, sizeof(buffer), TIME_IMMEDIATE);
         if (size > 0) {
             raw_hid_receive(buffer, size);
         }
@@ -819,18 +1030,34 @@ void raw_hid_task(void) {
 
 #ifdef MIDI_ENABLE
 
-void send_midi_packet(MIDI_EventPacket_t *event) { chnWrite(&drivers.midi_driver.driver, (uint8_t *)event, sizeof(MIDI_EventPacket_t)); }
+void send_midi_packet(MIDI_EventPacket_t *event) {
+    chnWrite(&drivers.midi_driver.driver, (uint8_t *)event, sizeof(MIDI_EventPacket_t));
+}
 
 bool recv_midi_packet(MIDI_EventPacket_t *const event) {
     size_t size = chnReadTimeout(&drivers.midi_driver.driver, (uint8_t *)event, sizeof(MIDI_EventPacket_t), TIME_IMMEDIATE);
     return size == sizeof(MIDI_EventPacket_t);
 }
-
+void midi_ep_task(void) {
+    uint8_t buffer[MIDI_STREAM_EPSIZE];
+    size_t  size = 0;
+    do {
+        size = chnReadTimeout(&drivers.midi_driver.driver, buffer, sizeof(buffer), TIME_IMMEDIATE);
+        if (size > 0) {
+            MIDI_EventPacket_t event;
+            recv_midi_packet(&event);
+        }
+    } while (size > 0);
+}
 #endif
 
 #ifdef VIRTSER_ENABLE
 
-void virtser_send(const uint8_t byte) { chnWrite(&drivers.serial_driver.driver, &byte, 1); }
+void virtser_init(void) {}
+
+void virtser_send(const uint8_t byte) {
+    chnWrite(&drivers.serial_driver.driver, &byte, 1);
+}
 
 __attribute__((weak)) void virtser_recv(uint8_t c) {
     // Ignore by default

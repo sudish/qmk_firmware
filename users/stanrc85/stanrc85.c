@@ -8,7 +8,7 @@ bool process_record_keymap(uint16_t keycode, keyrecord_t *record) {
 }
 
 // determine the tapdance state to return
-int cur_dance (qk_tap_dance_state_t *state) {
+int cur_dance (tap_dance_state_t *state) {
   if (state->count == 1) {
     if (state->interrupted || !state->pressed) { return SINGLE_TAP; }
     else { return SINGLE_HOLD; }
@@ -18,21 +18,21 @@ int cur_dance (qk_tap_dance_state_t *state) {
 }
 
 // handle the possible states for each tapdance keycode you define:
-void ctl_copy_finished (qk_tap_dance_state_t *state, void *user_data) {
+void ctl_copy_finished (tap_dance_state_t *state, void *user_data) {
   td_state = cur_dance(state);
   switch (td_state) {
     case SINGLE_TAP:
-      SEND_STRING(SS_LCTRL("c"));
+      SEND_STRING(SS_LCTL("c"));
       break;
     case SINGLE_HOLD:
       register_mods(MOD_BIT(KC_RCTL));
       break;
     case DOUBLE_TAP:
-      SEND_STRING(SS_LCTRL("v"));
+      SEND_STRING(SS_LCTL("v"));
   }
 }
 
-void ctl_copy_reset (qk_tap_dance_state_t *state, void *user_data) {
+void ctl_copy_reset (tap_dance_state_t *state, void *user_data) {
   switch (td_state) {
     case SINGLE_TAP:
       break;
@@ -44,8 +44,61 @@ void ctl_copy_reset (qk_tap_dance_state_t *state, void *user_data) {
   }
 }
 
-qk_tap_dance_action_t tap_dance_actions[] = {
-  [TD_WIN] = ACTION_TAP_DANCE_DOUBLE(KC_CAD, KC_LOCK),
+#if defined(HAS_ROTARY)
+  bool encoder_update_user(uint8_t index, bool clockwise) {
+    if (index == 0) { /* First encoder */
+        if (clockwise) {
+            tap_code(KC_VOLD);
+        } else {
+            tap_code(KC_VOLU);
+        }
+    }
+    return true;
+  }
+#endif
+
+#if defined(HAS_INDICATORS)
+  static uint8_t led_user = 0;
+#endif
+
+void lock_unlock (tap_dance_state_t *state, void *user_data) {
+  td_state = cur_dance(state);
+  switch (td_state) {
+    case SINGLE_TAP: // Ctl + Alt + Del to unlock workstation
+    tap_code16(KC_CAD);
+    #if defined(HAS_INDICATORS)
+      led_user = 0;
+      #if defined(KEYBOARD_sneakbox_aliceclone) || defined(KEYBOARD_mechlovin_adelais_standard_led_arm_rev4_stm32f303)
+        led_user = 1;
+      #endif
+      writePin(INDICATOR_PIN_0, !led_user);
+      wait_ms(200);
+      writePin(INDICATOR_PIN_1, !led_user);
+      wait_ms(200);
+      writePin(INDICATOR_PIN_2, !led_user);
+    #endif
+      break;
+    case SINGLE_HOLD:
+      break;
+    case DOUBLE_TAP: //Lock workstation
+    tap_code16(KC_LOCK);
+    #if defined(HAS_INDICATORS)
+      led_user = 1;
+      #if defined(KEYBOARD_sneakbox_aliceclone) || defined(KEYBOARD_mechlovin_adelais_standard_led_arm_rev4_stm32f303)
+        led_user = 0;
+      #endif
+      writePin(INDICATOR_PIN_2, !led_user);
+      wait_ms(200);
+      writePin(INDICATOR_PIN_1, !led_user);
+      wait_ms(200);
+      writePin(INDICATOR_PIN_0, !led_user);
+    #endif
+      break;
+  }
+}
+
+tap_dance_action_t tap_dance_actions[] = {
+  [TD_WIN] = ACTION_TAP_DANCE_FN(lock_unlock),
   [TD_ESC] = ACTION_TAP_DANCE_DOUBLE(KC_ESC, KC_GRV),
   [TD_RCTL] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, ctl_copy_finished, ctl_copy_reset)
 };
@@ -56,26 +109,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (!record->event.pressed) {
       uint8_t mods = get_mods();
       clear_mods();
-      send_string_with_delay_P(PSTR("make " QMK_KEYBOARD ":" QMK_KEYMAP), 10);
         if (mods & MOD_MASK_SHIFT) {
-          //RESET board for flashing if SHIFT held or tapped with KC_MAKE
-          #if defined(__arm__)
-            send_string_with_delay_P(PSTR(":dfu-util"), 10);
-          #elif defined(BOOTLOADER_DFU)
-            send_string_with_delay_P(PSTR(":dfu"), 10);
-          #elif defined(BOOTLOADER_HALFKAY)
-            send_string_with_delay_P(PSTR(":teensy"), 10);
-          #elif defined(BOOTLOADER_CATERINA)
-            send_string_with_delay_P(PSTR(":avrdude"), 10);
-          #endif // bootloader options
-          send_string_with_delay_P(PSTR(SS_TAP(X_ENTER)), 10);
+          send_string_with_delay_P(PSTR("qmk flash -j 6 -kb " QMK_KEYBOARD " -km " QMK_KEYMAP "\n"), 10); //New way
           reset_keyboard();
         }
-        if (mods & MOD_MASK_CTRL) {
-          send_string_with_delay_P(PSTR(" -j8 --output-sync"), 10);
-        }
-        send_string_with_delay_P(PSTR(SS_TAP(X_ENTER)), 10);
-        set_mods(mods);
+        else
+          send_string_with_delay_P(PSTR("qmk compile -j 6 -kb " QMK_KEYBOARD " -km " QMK_KEYMAP "\n"), 10); //New way
+      set_mods(mods);
       }
     break;
   case KC_RDP: //Opens Windows RDP

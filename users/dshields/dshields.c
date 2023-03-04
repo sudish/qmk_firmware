@@ -1,11 +1,11 @@
 #include "quantum.h"
 #include "dshields.h"
 
-extern bool process_record_dynamic_macro(uint16_t keycode, keyrecord_t *record);
-
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (!process_record_dynamic_macro(keycode, record)) {
-        return false;
+    if ((keycode >= QK_MOD_TAP && keycode <= QK_MOD_TAP_MAX)
+            || (keycode >= QK_LAYER_TAP && keycode <= QK_LAYER_TAP_MAX)
+            || (keycode >= QK_MODS && keycode <= QK_MODS_MAX)) {
+        keycode = keycode & 0xFF;
     }
     if (keycode == KC_ESC && record->event.pressed) {
         bool rc = true;
@@ -29,3 +29,29 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case MT_A:
+        case MT_S:
+        case MT_D:
+        case MT_F:
+        case MT_J:
+        case MT_K:
+        case MT_L:
+        case MT_SCLN:
+            return 0;
+        default:
+            return QUICK_TAP_TERM;
+    }
+}
+
+bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case MT_SPC:
+        case MT_BSPC:
+        case MT_ESC:
+            return true;
+        default:
+            return false;
+    }
+}
