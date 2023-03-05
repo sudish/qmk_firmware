@@ -25,9 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #define MASTER_RIGHT
 // #define EE_HANDS
 
-#undef TAPPING_FORCE_HOLD
 #undef TAPPING_TERM
 #define TAPPING_TERM 200
+
+// Tap followed by another tap should auto-repeat
+#undef QUICK_TAP_TERM
+#define QUICK_TAP_TERM TAPPING_TERM
 
 #define IGNORE_MOD_TAP_INTERRUPT
 #define PERMISSIVE_HOLD
