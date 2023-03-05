@@ -66,12 +66,12 @@ enum {
 // Modifier/layer macros to ease using MT(), LT() and similar across multiple keyboards and keymaps.
 
 // Home row
-#define HROW_L(K1, K2, K3, K4, K5)           LSFT_T(K1), LT(_SYSTEM,K2), LT(_SYMBOL_R,K3), LT(_NUMBER_R,K4), K5
-#define HROW_R(K1, K2, K3, K4, K5)           K1, LT(_NUMBER_L,K2), LT(_SYMBOL_L,K3), LT(_SYSTEM,K4), RSFT_T(K5)
+#define HROW_L(K1, K2, K3, K4, K5)           LSFT_T(K1), K2, LT(_SYMBOL_R,K3), LT(_NUMBER_R,K4), K5
+#define HROW_R(K1, K2, K3, K4, K5)           K1, LT(_NUMBER_L,K2), LT(_SYMBOL_L,K3), K4, RSFT_T(K5)
 // Bottom row
-#define BROW(K1, K2, K3, K4, K5, K6)         LGUI_T(K1), LCTL_T(K2), LALT_T(K3), RALT_T(K4), RCTL_T(K5), RGUI_T(K6)
-#define BROW_L3(K1, K2, K3)                  LGUI_T(K1), LCTL_T(K2), LALT_T(K3)
-#define BROW_R3(K4, K5, K6)                  RALT_T(K4), RCTL_T(K5), RGUI_T(K6)
+#define BROW(K1, K2, K3, K4, K5, K6)         LSFT_T(K1), LCTL_T(K2), LALT_T(K3), RALT_T(K4), RCTL_T(K5), RSFT_T(K6)
+#define BROW_L3(K1, K2, K3)                  LSFT_T(K1), LCTL_T(K2), LALT_T(K3)
+#define BROW_R3(K4, K5, K6)                  RALT_T(K4), RCTL_T(K5), RSFT_T(K6)
 
 // Layer on/off toggle/switch
 #define TG_SYS  TG(_SYSTEM)
@@ -125,7 +125,7 @@ at once, rather than for each keyboard, one at a time.
 #define ________________SYMBOL_L2__________________              KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC
 #define ________________SYMBOL_L3__________________              KC_NO,   KC_DQT,  KC_TILD, KC_PIPE, KC_NO
 
-#define ________________SYMBOL_R1__________________              KC_NO,   KC_EQL,  KC_MINS, KC_LBRC, KC_RBRC
+#define ________________SYMBOL_R1__________________              KC_NO,   KC_MINS, KC_EQL,  KC_LBRC, KC_RBRC
 #define ________________SYMBOL_R2__________________              KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN
 #define ________________SYMBOL_R3__________________              KC_NO,   KC_UNDS, KC_PLUS, KC_LCBR, KC_RCBR
 
