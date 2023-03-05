@@ -105,9 +105,9 @@ at once, rather than for each keyboard, one at a time.
 #define _________________QWERTY_R2_________________       HROW_R(KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN)
 #define _________________QWERTY_R3_________________              KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH
 
-#define _________________QWERTY_B6_________________         BROW(KC_ESC,   KC_BSPC, KC_TAB,  KC_ENT,  KC_SPC,  KC_QUOT)
-#define          ________QWERTY_B3_R______               BROW_R3(KC_ENT,   KC_BSPC, KC_QUOT)
-#define          ________QWERTY_B3_L______               BROW_L3(KC_ESC,   KC_SPC,  KC_TAB)
+#define _________________QWERTY_B6_________________         BROW(KC_ESC,  KC_BSPC, KC_TAB,  KC_ENT,  KC_SPC,  KC_QUOT)
+#define          ________QWERTY_B3_R______               BROW_R3(KC_ESC,  KC_SPC,  KC_ENT)
+#define          ________QWERTY_B3_L______               BROW_L3(KC_TAB,  KC_BSPC, KC_DEL)
 
 
 #define ________________NUMBER_L1__________________              KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5

@@ -20,11 +20,11 @@ extern uint8_t is_master;
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_QWERTY] = LAYOUT_wrapper( \
-      KC_ESC,  _________________QWERTY_LNUM_______________,                   _________________QWERTY_RNUM_______________, KC_BSPC, \
-      KC_TAB,  _________________QWERTY_L1_________________,                   _________________QWERTY_R1_________________, KC_BSLS, \
+      KC_EQL,  _________________QWERTY_LNUM_______________,                   _________________QWERTY_RNUM_______________, KC_MINS, \
+      KC_GRV,  _________________QWERTY_L1_________________,                   _________________QWERTY_R1_________________, KC_BSLS, \
       KC_CAPS, _________________QWERTY_L2_________________,                   _________________QWERTY_R2_________________, KC_QUOT, \
       KC_LGUI, _________________QWERTY_L3_________________, TG_SYS,   TG_SYS, _________________QWERTY_R3_________________, KC_RGUI, \
-      KC_LEFT, KC_UP,   KC_DOWN, KC_RGHT, ________QWERTY_B3_L______, ________QWERTY_B3_R______, KC_LEFT, KC_UP,   KC_DOWN, KC_RGHT  \
+      KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, ________QWERTY_B3_L______, ________QWERTY_B3_R______, KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT  \
       ),
 
   [_NUMBER_L] = LAYOUT_wrapper( \
@@ -63,8 +63,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       QK_BOOT, ___________________PASS____________________,                   ___________________PASS____________________, TG_ADJS, \
       EE_CLR,  ________________SYSTEM_L1__________________,                   ________________SYSTEM_R1__________________, EE_CLR,  \
       VRSN,    ________________SYSTEM_L2__________________,                   ________________SYSTEM_R2__________________, _______, \
-      _______, ________________SYSTEM_L3__________________, _______, _______, ________________SYSTEM_R3__________________, _______, \
-      TG_SYS,  _______, _______, _______, _________PASS_B3_________, _________PASS_B3_________, _______, _______, _______, SHKEYS   \
+      _______, ________________SYSTEM_L3__________________, TG_SYS,  TG_SYS,  ________________SYSTEM_R3__________________, _______, \
+      _______, _______, _______, _______, _________PASS_B3_________, _________PASS_B3_________, _______, _______, _______, SHKEYS   \
       )
 
 };
