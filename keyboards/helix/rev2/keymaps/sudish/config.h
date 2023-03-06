@@ -32,6 +32,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #undef QUICK_TAP_TERM
 #define QUICK_TAP_TERM TAPPING_TERM
 
+#define RETRO_SHIFT
+#define AUTO_SHIFT_TIMEOUT 175
+#define AUTO_SHIFT_MODIFIERS
+
 #define IGNORE_MOD_TAP_INTERRUPT
 #define PERMISSIVE_HOLD
 
