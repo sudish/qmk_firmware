@@ -66,8 +66,8 @@ enum {
 // Modifier/layer macros to ease using MT(), LT() and similar across multiple keyboards and keymaps.
 
 // Home row
-#define HROW_L(K1, K2, K3, K4, K5)           LSFT_T(K1), K2, LT(_SYMBOL_R,K3), LT(_NUMBER_R,K4), K5
-#define HROW_R(K1, K2, K3, K4, K5)           K1, LT(_NUMBER_L,K2), LT(_SYMBOL_L,K3), K4, RSFT_T(K5)
+#define HROW_L(K1, K2, K3, K4, K5)           LGUI_T(K1), LALT_T(K2), LCTL_T(K3), LSFT_T(K4), K5
+#define HROW_R(K1, K2, K3, K4, K5)           K1, RSFT_T(K2), RCTL_T(K3), RALT_T(K4), RGUI_T(K5)
 // Bottom row
 #define BROW(K1, K2, K3, K4, K5, K6)         LSFT_T(K1), LCTL_T(K2), LALT_T(K3), RALT_T(K4), RCTL_T(K5), RSFT_T(K6)
 #define BROW_L3(K1, K2, K3)                  LSFT_T(K1), LCTL_T(K2), LALT_T(K3)
