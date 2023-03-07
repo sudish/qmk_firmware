@@ -1,7 +1,5 @@
 SPLIT_KEYBOARD = yes
 
-LTO_ENABLE = yes  # if firmware size over limit, try this option
-
 # Helix Spacific Build Options
 # you can uncomment and edit follows 7 Variables
 #  jp: 以下の7つの変数を必要に応じて編集し、コメントアウトをはずします。
@@ -20,10 +18,6 @@ OLED_ENABLE = yes            # OLED_ENABLE
 #   If OLED_SELECT is 'core', use QMK standard oled_dirver.c.
 #   If OLED_SELECT is other than 'core', use helix/local_drivers/ssd1306.c.
 OLED_SELECT = core
-
-# sudish options
-EXTRAKEY_ENABLE = yes
-AUTO_SHIFT_ENABLE = yes
 
 ifeq ($(strip $(OLED_ENABLE)), yes)
     SRC += oled_display.c

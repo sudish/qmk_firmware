@@ -53,36 +53,9 @@ static void render_layer_status(void) {
     char buf[10];
     oled_write_P(PSTR("Layer: "), false);
     switch (get_highest_layer(layer_state)) {
-    case _QWERTY:
-        oled_write_P(PSTR("Default"), false);
-        break;
-    case _NUMBER_L:
-        oled_write_P(PSTR("Number L"), false);
-        break;
-    case _NUMBER_R:
-        oled_write_P(PSTR("Number R"), false);
-        break;
-    case _SYMBOL_L:
-        oled_write_P(PSTR("Symbol L"), false);
-        break;
-    case _SYMBOL_R:
-        oled_write_P(PSTR("Symbol R"), false);
-        break;
-    case _SYSTEM:
-        oled_write_P(PSTR("System"), false);
-        break;
-    case _GAME:
-        oled_write_P(PSTR("Game"), false);
-        break;
-    case _GAMENAV:
-        oled_write_P(PSTR("Game Nav"), false);
-        break;
-    case _GAMENF:
-        oled_write_P(PSTR("Game NF"), false);
-        break;
-    case _ADJUST:
-        oled_write_P(PSTR("Adjust"), false);
-        break;
+    #define MIRYOKU_X(LAYER, STRING) case U_##LAYER: oled_write_P(PSTR(STRING), false); break;
+    MIRYOKU_LAYER_LIST
+    #undef MIRMIRYOKU_X
     default:
         oled_write_P(PSTR("Undef-"), false);
         snprintf(buf,sizeof(buf), "%u", layer_state);
@@ -130,7 +103,8 @@ bool oled_task_user(void) {
     if (is_keyboard_master()) {
         render_status();
     } else {
-        render_helix_logo();
+        render_status();
+        // render_helix_logo();
         // render_rgbled_status(false);
         // render_layer_status();
     }

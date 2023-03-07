@@ -1,111 +1,78 @@
 #include QMK_KEYBOARD_H
 #include "sudish.h"
 
-
-/* Layer names */
+// Layer names
 static const char *sj_layer_name[] = {
-    [_QWERTY]   = "Default",
-    [_NUMBER_L] = "Number L",
-    [_NUMBER_R] = "Number R",
-    [_SYMBOL_L] = "Symbol L",
-    [_SYMBOL_R] = "Symbol R",
-    [_SYSTEM]   = "System",
-    [_GAME]     = "Game",
-    [_GAMENAV]  = "Game Nav",
-    [_GAMENF]   = "Game NF",
-    [_ADJUST]   = "Adjust",
-    [_N_LAYERS] = "Unknown"
+#define MIRYOKU_X(LAYER, STRING) [U_##LAYER] = STRING,
+MIRYOKU_LAYER_LIST
+#undef MIRYOKU_X
+    [N_LAYERS] = "Unknown"
 };
 
 const char *get_layer_name(uint8_t layer) {
-    if (layer > _N_LAYERS) { layer = _N_LAYERS; };
+    if (layer > N_LAYERS) { layer = N_LAYERS; };
     return sj_layer_name[layer];
 }
 
+// Additional Features double tap guard
+void u_td_fn_boot(tap_dance_state_t *state, void *user_data) {
+  if (state->count == 2) {
+    reset_keyboard();
+  }
+}
 
-/* Layers to color map */
-#ifdef RGB_MATRIX_ENABLE
-extern rgb_config_t rgb_matrix_config;
+#define MIRYOKU_X(LAYER, STRING) \
+void u_td_fn_U_##LAYER(tap_dance_state_t *state, void *user_data) { \
+  if (state->count == 2) { \
+    default_layer_set((layer_state_t)1 << U_##LAYER); \
+  } \
+}
+MIRYOKU_LAYER_LIST
+#undef MIRYOKU_X
 
-typedef struct PACKED {
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
-} sjRGB;
-
-sjRGB layer_to_color[] = {
-    [_QWERTY]   = { RGB_WHITE },
-    [_NUMBER_L] = { RGB_GREEN },
-    [_NUMBER_R] = { RGB_GREEN },
-    [_SYMBOL_L] = { RGB_TEAL },
-    [_SYMBOL_R] = { RGB_TEAL },
-    [_SYSTEM]   = { RGB_BLUE },
-    [_GAME]     = { RGB_GOLD },
-    [_GAMENAV]  = { RGB_GOLDENROD },
-    [_GAMENF]   = { RGB_GREEN },
-    [_ADJUST]   = { RGB_MAGENTA },
-    [_N_LAYERS] = { RGB_RED }       // Catchall color for unknown layer values
+tap_dance_action_t tap_dance_actions[] = {
+    [U_TD_BOOT] = ACTION_TAP_DANCE_FN(u_td_fn_boot),
+#define MIRYOKU_X(LAYER, STRING) [U_TD_U_##LAYER] = ACTION_TAP_DANCE_FN(u_td_fn_U_##LAYER),
+MIRYOKU_LAYER_LIST
+#undef MIRYOKU_X
 };
 
-__attribute__ ((weak))
-void set_layer_rgb_indicator_keymap(uint8_t r, uint8_t g, uint8_t b) {
-    return;
-}
 
-void set_layer_rgb_indicator(uint8_t layer) {
-    if (layer > _N_LAYERS) { layer = _N_LAYERS; };
-    set_layer_rgb_indicator_keymap(layer_to_color[layer].r, layer_to_color[layer].g, layer_to_color[layer].b);
-}
-#endif // RGB_MATRIX_ENABLE
+// shift functions
+const key_override_t capsword_key_override = ko_make_basic(MOD_MASK_SHIFT, CW_TOGG, KC_CAPS);
 
-__attribute__ ((weak))
-layer_state_t layer_state_set_keymap(layer_state_t state) {
-    return state;
-}
+const key_override_t **key_overrides = (const key_override_t *[]){
+    &capsword_key_override,
+    NULL
+};
 
-layer_state_t layer_state_set_user(layer_state_t state) {
-#ifdef RGB_MATRIX_ENABLE
-    set_layer_rgb_indicator(biton32(state));
-#endif // RGB_MATRIX_ENABLE
 
-    return layer_state_set_keymap(state);
-}
-
-void suspend_power_down_user(void) {
-#ifdef RGB_MATRIX_ENABLE
-    rgb_matrix_set_suspend_state(true);
-#endif // RGB_MATRIX_ENABLE
-}
-
-void suspend_wakeup_init_user(void) {
-#ifdef RGB_MATRIX_ENABLE
-    rgb_matrix_set_suspend_state(false);
-#endif // RGB_MATRIX_ENABLE
-}
-
-void keyboard_post_init_user(void) {
-    // Simulate a layer change to the default at startup so hooks can run
-    layer_state_set_user(1UL << _QWERTY);
-
-#ifdef RGB_MATRIX_ENABLE
-    // Don't write to the EEPROM unless needed
-    if (!rgb_matrix_config.enable) { rgb_matrix_enable(); }
-    if (rgb_matrix_config.mode != RGB_LAYER_INDICATOR_MODE) { rgb_matrix_mode(RGB_LAYER_INDICATOR_MODE); }
-#endif // RGB_MATRIX_ENABLE
-}
-
-#ifdef RGB_MATRIX_ENABLE
-extern led_config_t g_led_config;
-
-void rgb_matrix_layer_helper(uint8_t red, uint8_t green, uint8_t blue, uint8_t led_type) {
-    if (rgb_matrix_config.enable
-            && (rgb_matrix_config.mode == RGB_LAYER_INDICATOR_MODE)
-            && !g_suspend_state) {
-        for (int i = 0; i < DRIVER_LED_TOTAL; i++) {
-            if (HAS_ANY_FLAGS(g_led_config.flags[i], led_type)) {
-                rgb_matrix_set_color(i, red, green, blue);
-            }
-        }
-    }
-}
-#endif // RGB_MATRIX_ENABLE
+// thumb combos
+#if defined (MIRYOKU_KLUDGE_THUMBCOMBOS)
+const uint16_t PROGMEM thumbcombos_base_right[] = {LT(U_SYM, KC_ENT), LT(U_NUM, KC_BSPC), COMBO_END};
+const uint16_t PROGMEM thumbcombos_base_left[] = {LT(U_NAV, KC_SPC), LT(U_MOUSE, KC_TAB), COMBO_END};
+const uint16_t PROGMEM thumbcombos_nav[] = {KC_ENT, KC_BSPC, COMBO_END};
+const uint16_t PROGMEM thumbcombos_mouse[] = {KC_BTN2, KC_BTN1, COMBO_END};
+const uint16_t PROGMEM thumbcombos_media[] = {KC_MSTP, KC_MPLY, COMBO_END};
+const uint16_t PROGMEM thumbcombos_num[] = {KC_0, KC_MINS, COMBO_END};
+  #if defined (MIRYOKU_LAYERS_FLIP)
+const uint16_t PROGMEM thumbcombos_sym[] = {KC_UNDS, KC_LPRN, COMBO_END};
+  #else
+const uint16_t PROGMEM thumbcombos_sym[] = {KC_RPRN, KC_UNDS, COMBO_END};
+  #endif
+const uint16_t PROGMEM thumbcombos_fun[] = {KC_SPC, KC_TAB, COMBO_END};
+combo_t key_combos[COMBO_COUNT] = {
+  COMBO(thumbcombos_base_right, LT(U_FUN, KC_DEL)),
+  COMBO(thumbcombos_base_left, LT(U_MEDIA, KC_ESC)),
+  COMBO(thumbcombos_nav, KC_DEL),
+  COMBO(thumbcombos_mouse, KC_BTN3),
+  COMBO(thumbcombos_media, KC_MUTE),
+  COMBO(thumbcombos_num, KC_DOT),
+  #if defined (MIRYOKU_LAYERS_FLIP)
+  COMBO(thumbcombos_sym, KC_RPRN),
+  #else
+  COMBO(thumbcombos_sym, KC_LPRN),
+  #endif
+  COMBO(thumbcombos_fun, KC_APP)
+};
+#endif
