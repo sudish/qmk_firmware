@@ -13,10 +13,6 @@
 // Enable rapid switch from tap to hold, disables double tap hold auto-repeat.
 #define QUICK_TAP_TERM 0
 
-// Tap followed by another tap should auto-repeat
-// #undef QUICK_TAP_TERM
-// #define QUICK_TAP_TERM TAPPING_TERM
-
 // Auto Shift
 #define NO_AUTO_SHIFT_ALPHA
 #define AUTO_SHIFT_TIMEOUT TAPPING_TERM
