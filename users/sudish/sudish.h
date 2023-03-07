@@ -17,24 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// Idea from @drashna's wrappers.h
 
-/*
-Since our quirky block definitions are basically a list of comma separated
-arguments, we need a wrapper in order for these definitions to be
-expanded before being used as arguments to the LAYOUT_xxx macro.
-*/
+/* Since our block definitions are basically a list of comma separated
+   arguments, we need a wrapper in order for these definitions to be
+   expanded before being used as arguments to the LAYOUT_xxx macro. */
 #if (!defined(LAYOUT) && defined(KEYMAP))
   #define LAYOUT KEYMAP
 #endif
 
 #define LAYOUT_wrapper(...)                  LAYOUT(__VA_ARGS__)
-
-
-// Common keycodes across all keyboards
-enum custom_keycodes {
-  VRSN = SAFE_RANGE
-};
 
 
 #if !defined (MIRYOKU_LAYER_LIST)
@@ -53,8 +44,7 @@ MIRYOKU_X(FUN,    "Fun")
 
 #endif
 
-
-// Common layers
+// Layers
 enum miryoku_layers {
 #define MIRYOKU_X(LAYER, STRING) U_##LAYER,
 MIRYOKU_LAYER_LIST
@@ -62,6 +52,7 @@ MIRYOKU_LAYER_LIST
   N_LAYERS  // Total number of layers
 };
 
+// tap dances
 enum {
     U_TD_BOOT,
 #define MIRYOKU_X(LAYER, STRING) U_TD_U_##LAYER,
@@ -69,16 +60,7 @@ MIRYOKU_LAYER_LIST
 #undef MIRYOKU_X
 };
 
-#ifdef TAP_DANCE_ENABLE
-enum {
-  TD_M_SYS = 0,
-};
-
-#define TD_MSYS TD(TD_M_SYS)
-#endif // TAP_DANCE_ENABLE
-
-#define TG_XTRA TG(U_EXTRA)
-#define TO_BASE TO(U_BASE)
+#define TG_TAP TG(U_TAP)
 
 #define U_NP KC_NO // key is not present
 #define U_NA KC_NO // present but not available for use

@@ -20,34 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-/* Select hand configuration */
+// Select hand configuration
 #define MASTER_LEFT
 // #define MASTER_RIGHT
 // #define EE_HANDS
-
-#undef TAPPING_TERM
-#define TAPPING_TERM 200
-
-// Tap followed by another tap should auto-repeat
-#undef QUICK_TAP_TERM
-#define QUICK_TAP_TERM TAPPING_TERM
-
-#define RETRO_SHIFT
-#define AUTO_SHIFT_TIMEOUT 175
-#define AUTO_SHIFT_MODIFIERS
-
-#define IGNORE_MOD_TAP_INTERRUPT
-#define PERMISSIVE_HOLD
-
-// Selection of RGBLIGHT MODE to use.
-#if defined(LED_ANIMATIONS)
-   #define RGBLIGHT_EFFECT_BREATHING
-   #define RGBLIGHT_EFFECT_RAINBOW_MOOD
-   #define RGBLIGHT_EFFECT_RAINBOW_SWIRL
-   #define RGBLIGHT_EFFECT_SNAKE
-   #define RGBLIGHT_EFFECT_KNIGHT
-   #define RGBLIGHT_EFFECT_CHRISTMAS
-   #define RGBLIGHT_EFFECT_STATIC_GRADIENT
-   //#define RGBLIGHT_EFFECT_RGB_TEST
-   //#define RGBLIGHT_EFFECT_ALTERNATING
-#endif
