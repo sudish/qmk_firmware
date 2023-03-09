@@ -55,7 +55,7 @@ static void render_layer_status(void) {
     switch (get_highest_layer(layer_state)) {
     #define MIRYOKU_X(LAYER, STRING) case U_##LAYER: oled_write_P(PSTR(STRING), false); break;
     MIRYOKU_LAYER_LIST
-    #undef MIRMIRYOKU_X
+    #undef MIRYOKU_X
     default:
         oled_write_P(PSTR("Undef-"), false);
         snprintf(buf,sizeof(buf), "%u", layer_state);
