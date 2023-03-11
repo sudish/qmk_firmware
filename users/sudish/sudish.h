@@ -119,15 +119,19 @@ MIRYOKU_LAYER_LIST
 #define          __________BASE_B3_L______               BROW_L3(KC_DEL,            KC_BSPC,           KC_TAB)
 #define          __________BASE_B3_R______               BROW_R3(KC_ENT,            KC_SPC,            KC_ESC)
 
+// Same hand bindings for layers
+#define __________________SAME_L1__________________              TD(U_TD_BOOT),     TD(U_TD_U_TAP),    TD(U_TD_U_EXTRA),  TD(U_TD_U_BASE),   U_NA
+#define __________________SAME_L2__________________              KC_LSFT,           KC_LCTL,           KC_LALT,           KC_LGUI,           U_NA
+#define __________________SAME_L3__________________              U_NA,              KC_ALGR,           TD(U_TD_U_NUM),    TD(U_TD_U_NAV),    U_NA
+
+#define __________________SAME_R1__________________              U_NA,              TD(U_TD_U_BASE),   TD(U_TD_U_EXTRA),  TD(U_TD_U_TAP),    TD(U_TD_BOOT)
+#define __________________SAME_R2__________________              U_NA,              KC_LGUI,           KC_LALT,           KC_LCTL,           KC_LSFT
+#define __________________SAME_R3__________________              U_NA,              TD(U_TD_U_NUM),    TD(U_TD_U_NAV),    KC_ALGR,           U_NA
 
 // MIRYOKU_ALTERNATIVES_NUM
 #define ___________________NUM_L1__________________              KC_LBRC,           KC_7,              KC_8,              KC_9,              KC_RBRC
 #define ___________________NUM_L2__________________              KC_SCLN,           KC_4,              KC_5,              KC_6,              KC_EQL
 #define ___________________NUM_L3__________________              KC_GRV,            KC_1,              KC_2,              KC_3,              KC_BSLS
-
-#define ___________________NUM_R1__________________              U_NA,              TD(U_TD_U_BASE),   TD(U_TD_U_EXTRA),  TD(U_TD_U_TAP),    TD(U_TD_BOOT)
-#define ___________________NUM_R2__________________              U_NA,              KC_LGUI,           KC_LALT,           KC_LCTL,           KC_LSFT
-#define ___________________NUM_R3__________________              U_NA,              TD(U_TD_U_NUM),    TD(U_TD_U_NAV),    KC_ALGR,           U_NA
 
 #define ___________________NUM_B6__________________              KC_DOT,            KC_0,              KC_MINS,           U_NA,              U_NA,              U_NA
 
@@ -137,10 +141,6 @@ MIRYOKU_LAYER_LIST
 #define ___________________SYM_L2__________________              KC_COLN,           KC_DLR,            KC_PERC,           KC_CIRC,           KC_PLUS
 #define ___________________SYM_L3__________________              KC_TILD,           KC_EXLM,           KC_AT,             KC_HASH,           KC_PIPE
 
-#define ___________________SYM_R1__________________              U_NA,              TD(U_TD_U_BASE),   TD(U_TD_U_EXTRA),  TD(U_TD_U_TAP),    TD(U_TD_BOOT)
-#define ___________________SYM_R2__________________              U_NA,              KC_LGUI,           KC_LALT,           KC_LCTL,           KC_LSFT
-#define ___________________SYM_R3__________________              U_NA,              TD(U_TD_U_SYM),    TD(U_TD_U_MOUSE),  KC_ALGR,           U_NA
-
 #define ___________________SYM_B6__________________              KC_LPRN,           KC_RPRN,           KC_UNDS,           U_NA,              U_NA,              U_NA
 
 // MIRYOKU_ALTERNATIVES_FUN
@@ -148,18 +148,10 @@ MIRYOKU_LAYER_LIST
 #define ___________________FUN_L2__________________              KC_F11,            KC_F4,             KC_F5,             KC_F6,             KC_SCRL
 #define ___________________FUN_L3__________________              KC_F10,            KC_F1,             KC_F2,             KC_F3,             KC_PAUS
 
-#define ___________________FUN_R1__________________              U_NA,              TD(U_TD_U_BASE),   TD(U_TD_U_EXTRA),  TD(U_TD_U_TAP),    TD(U_TD_BOOT)
-#define ___________________FUN_R2__________________              U_NA,              KC_LGUI,           KC_LALT,           KC_LCTL,           KC_LSFT
-#define ___________________FUN_R3__________________              U_NA,              TD(U_TD_U_FUN),    TD(U_TD_U_MEDIA),  KC_ALGR,           U_NA
-
 #define ___________________FUN_B6__________________              KC_APP,            KC_SPC,            KC_TAB,            U_NA,              U_NA,              U_NA
 
 
 // MIRYOKU_ALTERNATIVES_NAV_INVERTEDT
-#define ___________________NAV_L1__________________              TD(U_TD_BOOT),     TD(U_TD_U_TAP),    TD(U_TD_U_EXTRA),  TD(U_TD_U_BASE),   U_NA
-#define ___________________NAV_L2__________________              KC_LSFT,           KC_LCTL,           KC_LALT,           KC_LGUI,           U_NA
-#define ___________________NAV_L3__________________              U_NA,              KC_ALGR,           TD(U_TD_U_NUM),    TD(U_TD_U_NAV),    U_NA
-
 #define ___________________NAV_R1__________________              KC_INS,            KC_HOME,           KC_UP,             KC_END,            KC_PGUP
 #define ___________________NAV_R2__________________              CW_TOGG,           KC_LEFT,           KC_DOWN,           KC_RGHT,           KC_PGDN
 #define ___________________NAV_R3__________________              U_RDO,             U_PST,             U_CPY,             U_CUT,             U_UND
@@ -168,10 +160,6 @@ MIRYOKU_LAYER_LIST
 
 
 // MIRYOKU_ALTERNATIVES_MOUSE_INVERTEDT
-#define _________________MOUSE_L1__________________              TD(U_TD_BOOT),     TD(U_TD_U_TAP),    TD(U_TD_U_EXTRA),  TD(U_TD_U_BASE),   U_NA
-#define _________________MOUSE_L2__________________              KC_LSFT,           KC_LCTL,           KC_LALT,           KC_LGUI,           U_NA
-#define _________________MOUSE_L3__________________              U_NA,              KC_ALGR,           TD(U_TD_U_SYM),    TD(U_TD_U_MOUSE),  U_NA
-
 #define _________________MOUSE_R1__________________              U_NU,              KC_WH_L,           KC_MS_U,           KC_WH_R,           KC_WH_U
 #define _________________MOUSE_R2__________________              U_NU,              KC_MS_L,           KC_MS_D,           KC_MS_R,           KC_WH_D
 #define _________________MOUSE_R3__________________              U_RDO,             U_PST,             U_CPY,             U_CUT,             U_UND
@@ -180,10 +168,6 @@ MIRYOKU_LAYER_LIST
 
 
 // MIRYOKU_ALTERNATIVES_MEDIA_INVERTEDT
-#define _________________MEDIA_L1__________________              TD(U_TD_BOOT),     TD(U_TD_U_TAP),    TD(U_TD_U_EXTRA),  TD(U_TD_U_BASE),   U_NA
-#define _________________MEDIA_L2__________________              KC_LSFT,           KC_LCTL,           KC_LALT,           KC_LGUI,           U_NA
-#define _________________MEDIA_L3__________________              U_NA,              KC_ALGR,           TD(U_TD_U_FUN),    TD(U_TD_U_MEDIA),  U_NA
-
 #define _________________MEDIA_R1__________________              RGB_TOG,           RGB_MOD,           KC_VOLU,           RGB_HUI,           RGB_SAI
 #define _________________MEDIA_R2__________________              U_NU,              KC_MPRV,           KC_VOLD,           KC_MNXT,           RGB_VAI
 #define _________________MEDIA_R3__________________              OU_AUTO,           U_NU,              U_NU,              U_NU,              U_NU
