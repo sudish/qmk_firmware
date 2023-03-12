@@ -148,7 +148,7 @@ MIRYOKU_LAYER_LIST
 #define ___________________FUN_L2__________________              KC_F11,            KC_F4,             KC_F5,             KC_F6,             KC_SCRL
 #define ___________________FUN_L3__________________              KC_F10,            KC_F1,             KC_F2,             KC_F3,             KC_PAUS
 
-#define ___________________FUN_B6__________________              KC_APP,            KC_SPC,            KC_TAB,            U_NA,              U_NA,              U_NA
+#define ___________________FUN_B6__________________              KC_APP,            KC_BSPC,           KC_TAB,            U_NA,              U_NA,              U_NA
 
 
 // MIRYOKU_ALTERNATIVES_NAV_INVERTEDT
@@ -156,7 +156,7 @@ MIRYOKU_LAYER_LIST
 #define ___________________NAV_R2__________________              CW_TOGG,           KC_LEFT,           KC_DOWN,           KC_RGHT,           KC_PGDN
 #define ___________________NAV_R3__________________              U_RDO,             U_PST,             U_CPY,             U_CUT,             U_UND
 
-#define ___________________NAV_B6__________________              U_NA,              U_NA,              U_NA,              KC_ENT,            KC_BSPC,           KC_DEL
+#define ___________________NAV_B6__________________              U_NA,              U_NA,              U_NA,              KC_ENT,            KC_SPC,            KC_DEL
 
 
 // MIRYOKU_ALTERNATIVES_MOUSE_INVERTEDT
