@@ -125,7 +125,7 @@ MIRYOKU_LAYER_LIST
 #define __________________SAME_L3__________________              U_NA,              KC_ALGR,           TD(U_TD_U_NUM),    TD(U_TD_U_NAV),    U_NA
 
 #define __________________SAME_R1__________________              U_NA,              TD(U_TD_U_BASE),   TD(U_TD_U_EXTRA),  TD(U_TD_U_TAP),    TD(U_TD_BOOT)
-#define __________________SAME_R2__________________              U_NA,              KC_LGUI,           KC_LALT,           KC_LCTL,           KC_LSFT
+#define __________________SAME_R2__________________              C(S(KC_1)),        KC_LGUI,           KC_LALT,           KC_LCTL,           KC_LSFT
 #define __________________SAME_R3__________________              U_NA,              TD(U_TD_U_NUM),    TD(U_TD_U_NAV),    KC_ALGR,           U_NA
 
 // MIRYOKU_ALTERNATIVES_NUM
