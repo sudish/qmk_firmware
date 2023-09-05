@@ -12,4 +12,3 @@ SRC +=  #./lib/glcdfont.c \
         # ./lib/timelogger.c \
 
 OLED_ENABLE = yes
-OLED_DRIVER = SSD1306
